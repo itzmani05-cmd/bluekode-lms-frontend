@@ -1,0 +1,10 @@
+.idea
+.git
+.vscode
+.claude
+
+**/.DS_Store
+**/dist
+**/.vite
+**/.env
+**/node_modules

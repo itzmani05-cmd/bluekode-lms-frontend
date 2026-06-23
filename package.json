@@ -1,0 +1,19 @@
+{
+  "name": "bluekode-lms",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev -w packages/api & npm run dev -w packages/web",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "start": "npm run start -w packages/api & npm run start -w packages/web"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "packages/*"
+  ]
+}
