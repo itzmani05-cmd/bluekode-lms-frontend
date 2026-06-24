@@ -1,13 +1,464 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  INACTIVE
+}
+
+enum FormStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+}
+
+enum CourseStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ContentType {
+  LECTURE
+  ASSIGNMENT
+}
+
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AssignmentStatus {
+  PUBLISHED
+  ACTIVE
+  ARCHIVED
+  DRAFT
+  CLOSED
+}
+
+enum EnrollmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  REVIEWED
+  RESUBMISSION_REQUIRED
+}
+
+enum TrackerStatus {
+  SUBMITTED
+  REVIEWED
+  REOPENED
+}
+
+enum EmployeeInstitutionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Role {
+  role_id     Int       @id @default(autoincrement())
+  role_name   String    @unique @db.VarChar(100)
+  description String?   @db.Text
+  created_at  DateTime? @default(now())
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model User {
+  user_id        Int           @id @default(autoincrement())
+  full_name      String        @db.VarChar(100)
+  last_name      String        @db.VarChar(100)
+  email          String        @unique @db.VarChar(255)
+  phone          String?       @db.VarChar(20)
+  password_hash  String        @db.Text
+  account_status AccountStatus
+  is_deleted     Boolean       @default(false)
+  deleted_at     DateTime?
+  created_at     DateTime?     @default(now())
+  updated_at     DateTime?     @updatedAt
+
+  userRoles_created         UserRole[]           @relation("UserRoleCreatedBy")
+  userRoles_updated         UserRole[]           @relation("UserRoleUpdatedBy")
+  userRoles                 UserRole[]           @relation("UserRoleUser")
+  institutions_created      Institution[]        @relation("InstitutionCreatedBy")
+  institutions_updated      Institution[]        @relation("InstitutionUpdatedBy")
+  institutionCourses        InstitutionCourse[]  @relation("InstitutionCourseAssignedBy")
+  employeeProfiles_created  EmployeeProfile[]    @relation("EmployeeProfileCreatedBy")
+  employeeProfiles_updated  EmployeeProfile[]    @relation("EmployeeProfileUpdatedBy")
+  employeeProfile           EmployeeProfile?     @relation("EmployeeProfileUser")
+  employeeInstitutions_created EmployeeInstitution[] @relation("EmployeeInstitutionCreatedBy")
+  employeeInstitutions_updated EmployeeInstitution[] @relation("EmployeeInstitutionUpdatedBy")
+  studentProfiles_created   StudentProfile[]     @relation("StudentProfileCreatedBy")
+  studentProfiles_updated   StudentProfile[]     @relation("StudentProfileUpdatedBy")
+  studentProfile            StudentProfile?      @relation("StudentProfileUser")
+  courses_created           Course[]             @relation("CourseCreatedBy")
+  courses_updated           Course[]             @relation("CourseUpdatedBy")
+  modules_created           Module[]             @relation("ModuleCreatedBy")
+  modules_updated           Module[]             @relation("ModuleUpdatedBy")
+  lectures_created          Lecture[]            @relation("LectureCreatedBy")
+  lectures_updated          Lecture[]            @relation("LectureUpdatedBy")
+  enrollments_created       StudentCourseEnrollment[] @relation("EnrollmentCreatedBy")
+  enrollments_updated       StudentCourseEnrollment[] @relation("EnrollmentUpdatedBy")
+  rolePermissions           RolePermission[]     @relation("RolePermissionAssignedBy")
+
+  @@map("users")
+}
+
+model UserRole {
+  user_role_id Int       @id @default(autoincrement())
+  user_id      Int
+  role_id      Int
+  created_by   Int?
+  updated_by   Int?
+  assigned_at  DateTime?
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+
+  user        User  @relation("UserRoleUser", fields: [user_id], references: [user_id])
+  role        Role  @relation(fields: [role_id], references: [role_id])
+  createdBy   User? @relation("UserRoleCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy   User? @relation("UserRoleUpdatedBy", fields: [updated_by], references: [user_id])
+
+  @@unique([user_id, role_id])
+  @@map("user_roles")
+}
+
+model Permission {
+  permission_id   Int       @id @default(autoincrement())
+  permission_name String    @unique @db.VarChar(100)
+  module          String    @db.VarChar(100)
+  action          String    @db.VarChar(100)
+  description     String?   @db.Text
+  created_at      DateTime? @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role_permission_id Int       @id @default(autoincrement())
+  role_id            Int
+  permission_id      Int
+  assigned_by        Int?
+  created_at         DateTime? @default(now())
+
+  role        Role       @relation(fields: [role_id], references: [role_id])
+  permission  Permission @relation(fields: [permission_id], references: [permission_id])
+  assignedBy  User?      @relation("RolePermissionAssignedBy", fields: [assigned_by], references: [user_id])
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model Institution {
+  institution_id   Int       @id @default(autoincrement())
+  institution_name String    @unique @db.VarChar(255)
+  address          String?   @db.Text
+  city             String?   @db.VarChar(100)
+  is_deleted       Boolean   @default(false)
+  deleted_at       DateTime?
+  created_by       Int?
+  updated_by       Int?
+  created_at       DateTime? @default(now())
+  updated_at       DateTime? @updatedAt
+
+  createdBy            User?                 @relation("InstitutionCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy            User?                 @relation("InstitutionUpdatedBy", fields: [updated_by], references: [user_id])
+  studentProfiles      StudentProfile[]
+  employeeInstitutions EmployeeInstitution[]
+  institutionCourses   InstitutionCourse[]
+
+  @@map("institutions")
+}
+
+model EmployeeProfile {
+  employee_profile_id Int       @id @default(autoincrement())
+  user_id             Int       @unique
+  designation         String?   @db.VarChar(100)
+  specialization      String?   @db.VarChar(100)
+  years_of_experience Int?
+  joining_date        DateTime? @db.Date
+  is_active           Boolean?
+  created_by          Int?
+  updated_by          Int?
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @updatedAt
+
+  user      User  @relation("EmployeeProfileUser", fields: [user_id], references: [user_id])
+  createdBy User? @relation("EmployeeProfileCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy User? @relation("EmployeeProfileUpdatedBy", fields: [updated_by], references: [user_id])
+
+  employeeInstitutions EmployeeInstitution[] @relation("EmployeeInstitutionEmployee")
+  ledAsProjectLead     EmployeeInstitution[] @relation("ProjectLeadRelation")
+  ledAsTechnicalLead   EmployeeInstitution[] @relation("TechnicalLeadRelation")
+
+  reviewedSubmissions  AssignmentSubmission[] @relation("SubmissionReviewer")
+  originalSubstitutions    TrainerSubstitution[]  @relation("OriginalTrainer")
+  replacementSubstitutions TrainerSubstitution[]  @relation("ReplacementTrainer")
+
+  @@map("employee_profiles")
+}
+
+model StudentProfile {
+  student_profile_id Int        @id @default(autoincrement())
+  user_id            Int        @unique
+  institution_id     Int
+  department         String?    @db.VarChar(100)
+  academic_year      Int?
+  form_status        FormStatus
+  created_by         Int?
+  updated_by         Int?
+  created_at         DateTime?  @default(now())
+  updated_at         DateTime?  @updatedAt
+
+  user        User        @relation("StudentProfileUser", fields: [user_id], references: [user_id])
+  institution Institution @relation(fields: [institution_id], references: [institution_id])
+  createdBy   User?       @relation("StudentProfileCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy   User?       @relation("StudentProfileUpdatedBy", fields: [updated_by], references: [user_id])
+
+  enrollments StudentCourseEnrollment[]
+
+  @@index([institution_id])
+  @@map("student_profiles")
+}
+
+model EmployeeInstitution {
+  employee_institution_id    Int                       @id @default(autoincrement())
+  employee_profile_id        Int
+  institution_id             Int
+  project_lead_employee_id   Int?
+  technical_lead_employee_id Int?
+  assigned_date              DateTime?                 @db.Date
+  status                     EmployeeInstitutionStatus
+  created_by                 Int?
+  updated_by                 Int?
+  created_at                 DateTime?                 @default(now())
+  updated_at                 DateTime?                 @updatedAt
+
+  employeeProfile EmployeeProfile  @relation("EmployeeInstitutionEmployee", fields: [employee_profile_id], references: [employee_profile_id])
+  institution     Institution      @relation(fields: [institution_id], references: [institution_id])
+  projectLead     EmployeeProfile? @relation("ProjectLeadRelation", fields: [project_lead_employee_id], references: [employee_profile_id])
+  technicalLead   EmployeeProfile? @relation("TechnicalLeadRelation", fields: [technical_lead_employee_id], references: [employee_profile_id])
+  createdBy       User?            @relation("EmployeeInstitutionCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy       User?            @relation("EmployeeInstitutionUpdatedBy", fields: [updated_by], references: [user_id])
+
+  @@unique([employee_profile_id, institution_id])
+  @@map("employee_institutions")
+}
+
+model Course {
+  course_id   Int          @id @default(autoincrement())
+  course_name String       @db.VarChar(255)
+  description String?      @db.Text
+  status      CourseStatus
+  is_deleted  Boolean      @default(false)
+  deleted_at  DateTime?
+  created_by  Int?
+  updated_by  Int?
+  created_at  DateTime?    @default(now())
+  updated_at  DateTime?    @updatedAt
+
+  createdBy    User?               @relation("CourseCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy    User?               @relation("CourseUpdatedBy", fields: [updated_by], references: [user_id])
+  modules      Module[]
+  enrollments  StudentCourseEnrollment[]
+  institutions InstitutionCourse[]
+
+  @@map("courses")
+}
+
+model InstitutionCourse {
+  institution_course_id Int       @id @default(autoincrement())
+  institution_id        Int
+  course_id             Int
+  assigned_by           Int?
+  created_at            DateTime? @default(now())
+  updated_at            DateTime? @updatedAt
+
+  institution Institution @relation(fields: [institution_id], references: [institution_id])
+  course      Course      @relation(fields: [course_id], references: [course_id])
+  assignedBy  User?       @relation("InstitutionCourseAssignedBy", fields: [assigned_by], references: [user_id])
+
+  @@unique([institution_id, course_id])
+  @@map("institution_courses")
+}
+
+model Module {
+  module_id          Int       @id @default(autoincrement())
+  course_id          Int
+  module_name        String    @db.VarChar(255)
+  module_description String?   @db.Text
+  module_order       Int?
+  is_deleted         Boolean   @default(false)
+  deleted_at         DateTime?
+  created_by         Int?
+  updated_by         Int?
+  created_at         DateTime? @default(now())
+  updated_at         DateTime? @updatedAt
+
+  course    Course    @relation(fields: [course_id], references: [course_id])
+  createdBy User?     @relation("ModuleCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy User?     @relation("ModuleUpdatedBy", fields: [updated_by], references: [user_id])
+  lectures  Lecture[]
+
+  @@unique([course_id, module_order])
+  @@index([course_id])
+  @@map("modules")
+}
+
+model Lecture {
+  lecture_id                 Int              @id @default(autoincrement())
+  module_id                  Int
+  content_type               ContentType
+  title                      String           @db.VarChar(255)
+  description                String?          @db.Text
+  display_order              Int
+  pdf_url                    String?          @db.Text
+  estimated_duration_minutes Int?
+  lecture_status             LessonStatus
+  due_date                   DateTime?
+  max_marks                  Int?
+  assignment_status          AssignmentStatus?
+  late_submission_allowed    Boolean           @default(false)
+  late_submission_deadline   DateTime?
+  is_deleted                 Boolean           @default(false)
+  deleted_at                 DateTime?
+  created_by                 Int?
+  updated_by                 Int?
+  created_at                 DateTime?         @default(now())
+  updated_at                 DateTime?         @updatedAt
+
+  module    Module @relation(fields: [module_id], references: [module_id])
+  createdBy User?  @relation("LectureCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy User?  @relation("LectureUpdatedBy", fields: [updated_by], references: [user_id])
+
+  progresses  StudentProgress[]
+  submissions AssignmentSubmission[]
+
+  @@unique([module_id, display_order])
+  @@index([module_id])
+  @@index([content_type])
+  @@index([lecture_status])
+  @@map("lectures")
+}
+
+model StudentCourseEnrollment {
+  enrollment_id         Int              @id @default(autoincrement())
+  student_profile_id    Int
+  course_id             Int
+  enrollment_status     EnrollmentStatus
+  completion_percentage Decimal          @default(0.00) @db.Decimal(5, 2)
+  assigned_date         DateTime?
+  completed_date        DateTime?
+  created_by            Int?
+  updated_by            Int?
+  created_at            DateTime?        @default(now())
+  updated_at            DateTime?        @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [student_profile_id], references: [student_profile_id])
+  course         Course         @relation(fields: [course_id], references: [course_id])
+  createdBy      User?          @relation("EnrollmentCreatedBy", fields: [created_by], references: [user_id])
+  updatedBy      User?          @relation("EnrollmentUpdatedBy", fields: [updated_by], references: [user_id])
+
+  progresses  StudentProgress[]
+  submissions AssignmentSubmission[]
+
+  @@unique([student_profile_id, course_id])
+  @@index([course_id])
+  @@index([enrollment_status])
+  @@map("student_course_enrollment")
+}
+
+model StudentProgress {
+  progress_id     BigInt               @id @default(autoincrement())
+  enrollment_id   Int
+  lecture_id      Int
+  progress_status LessonProgressStatus
+  started_at      DateTime?
+  completion_date DateTime?
+  last_accessed   DateTime?
+  created_at      DateTime?            @default(now())
+  updated_at      DateTime?            @updatedAt
+
+  enrollment StudentCourseEnrollment @relation(fields: [enrollment_id], references: [enrollment_id])
+  lecture    Lecture                 @relation(fields: [lecture_id], references: [lecture_id])
+
+  @@unique([enrollment_id, lecture_id])
+  @@index([lecture_id])
+  @@index([progress_status])
+  @@index([last_accessed])
+  @@map("student_progress")
+}
+
+model AssignmentSubmission {
+  submission_id          BigInt            @id @default(autoincrement())
+  lecture_id             Int
+  enrollment_id          Int
+  attempt_no             Int               @default(1)
+  previous_submission_id BigInt?
+  resubmission_reason    String?           @db.Text
+  submission_url         String?           @db.Text
+  remarks                String?           @db.Text
+  marks_obtained         Decimal?          @db.Decimal(5, 2)
+  trainer_feedback       String?           @db.Text
+  submission_status      SubmissionStatus
+  reviewed_by            Int?
+  reviewed_at            DateTime?
+  viewed_at              DateTime?
+  created_at             DateTime?         @default(now())
+  updated_at             DateTime?         @updatedAt
+
+  lecture            Lecture                  @relation(fields: [lecture_id], references: [lecture_id])
+  enrollment         StudentCourseEnrollment  @relation(fields: [enrollment_id], references: [enrollment_id])
+  reviewer           EmployeeProfile?         @relation("SubmissionReviewer", fields: [reviewed_by], references: [employee_profile_id])
+  previousSubmission AssignmentSubmission?    @relation("SubmissionHistory", fields: [previous_submission_id], references: [submission_id])
+  nextSubmissions    AssignmentSubmission[]   @relation("SubmissionHistory")
+
+  @@unique([lecture_id, enrollment_id, attempt_no])
+  @@index([enrollment_id])
+  @@index([submission_status])
+  @@index([reviewed_by])
+  @@index([reviewed_at])
+  @@map("assignment_submissions")
+}
+
+model TrainerSubstitution {
+  trainer_substitution_id Int       @id @default(autoincrement())
+  original_trainer_id     Int
+  replacement_trainer_id  Int
+  leave_from              DateTime? @db.Date
+  leave_to                DateTime? @db.Date
+  reason                  String?   @db.Text
+  created_at              DateTime? @default(now())
+
+  originalTrainer    EmployeeProfile @relation("OriginalTrainer", fields: [original_trainer_id], references: [employee_profile_id])
+  replacementTrainer EmployeeProfile @relation("ReplacementTrainer", fields: [replacement_trainer_id], references: [employee_profile_id])
+
+  @@map("trainer_substitutions")
 }
