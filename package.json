@@ -15,5 +15,8 @@
   "packageManager": "npm@11.16.0",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@nestjs/swagger": "^11.4.4"
+  }
 }
