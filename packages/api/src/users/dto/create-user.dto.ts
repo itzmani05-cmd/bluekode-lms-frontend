@@ -16,7 +16,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(50)
-  firstName: string;
+  full_name: string;
 
   //last name
   @ApiProperty({
@@ -27,7 +27,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(50)
-  lastName: string;
+  last_name: string;
 
   //email
   @ApiProperty({

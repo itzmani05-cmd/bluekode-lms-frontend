@@ -17,6 +17,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/swagger": "^11.4.4"
   }
 }
