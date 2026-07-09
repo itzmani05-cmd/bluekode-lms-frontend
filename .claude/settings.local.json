@@ -1,0 +1,15 @@
+{
+  "_comment": "Local developer overrides — do NOT commit this file. Add it to .gitignore.",
+  "model": "claude-sonnet-4-6",
+  "editor": {
+    "preferredEditor": "vscode",
+    "tabSize": 2,
+    "insertSpaces": true
+  },
+  "verbosity": "normal",
+  "ui": {
+    "theme": "dark",
+    "showTokenCount": false,
+    "compactMode": false
+  }
+}
