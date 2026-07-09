@@ -1,122 +1,82 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import { useAppStore } from './store/login';
+import Login from './pages/auth/Login';
+import StudentDashboard from './pages/student/StudentDashboard';
+import MyCourse from './pages/student/MyCourse';
+import Assignments from './pages/student/Assignments';
+import Learning from './pages/student/Learning';
+import AdminDashboard from './pages/employees/admin/AdminDashboard';
+import AdminUsers from './pages/employees/admin/AdminUsers';
+import AdminInstitutions from './pages/employees/admin/AdminInstitutions';
+import AdminCourses from './pages/employees/admin/AdminCourses';
+import AdminStudents from './pages/employees/admin/AdminStudents';
+import AdminEmployees from './pages/employees/admin/AdminEmployees';
+import TrainerDashboard   from './pages/employees/trainer/TrainerDashboard';
+import TrainerSubmissions from './pages/employees/trainer/TrainerSubmissions';
+import TrainerStudents    from './pages/employees/trainer/TrainerStudents';
+import TrainerCourses     from './pages/employees/trainer/TrainerCourses';
+import type { AdminViewType }   from './components/layout/AdminSidebar';
+import type { TrainerViewType } from './components/layout/TrainerSidebar';
+
+type StudentViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isAuthenticated, currentUser } = useAppStore();
+  const [studentView, setStudentView] = useState<StudentViewType>('dashboard');
+  const [adminView, setAdminView]     = useState<AdminViewType>('admin-dashboard');
+  const [trainerView, setTrainerView] = useState<TrainerViewType>('trainer-dashboard');
+
+  if (isAuthenticated && currentUser) {
+
+    if (currentUser.role === 'student') {
+      if (studentView === 'courses')     return <MyCourse    onViewChange={setStudentView} />;
+      if (studentView === 'assignments') return <Assignments onViewChange={setStudentView} />;
+      if (studentView === 'learning')    return <Learning    onViewChange={setStudentView} />;
+      return <StudentDashboard onViewChange={setStudentView} />;
+    }
+
+    if (currentUser.role === 'admin') {
+      if (adminView === 'admin-users')        return <AdminUsers        onViewChange={setAdminView} />;
+      if (adminView === 'admin-institutions') return <AdminInstitutions onViewChange={setAdminView} />;
+      if (adminView === 'admin-courses')      return <AdminCourses      onViewChange={setAdminView} />;
+      if (adminView === 'admin-students')     return <AdminStudents     onViewChange={setAdminView} />;
+      if (adminView === 'admin-employees')    return <AdminEmployees    onViewChange={setAdminView} />;
+      return <AdminDashboard onViewChange={setAdminView} />;
+    }
+
+    if (currentUser.role === 'trainer') {
+      if (trainerView === 'trainer-submissions') return <TrainerSubmissions onViewChange={setTrainerView} />;
+      if (trainerView === 'trainer-students')    return <TrainerStudents    onViewChange={setTrainerView} />;
+      if (trainerView === 'trainer-courses')     return <TrainerCourses     onViewChange={setTrainerView} />;
+      return <TrainerDashboard onViewChange={setTrainerView} activeTab={trainerView} />;
+    }
+
+    // Fallback for technical head / project head roles
+    return (
+      <div className="min-h-screen w-full flex flex-col justify-between bg-slate-50">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">
+            {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} Dashboard
+          </h1>
+          <p className="mt-2 text-slate-500 max-w-md">
+            The {currentUser.role} console is authorized for {currentUser.email}.
+          </p>
+          <button
+            onClick={() => useAppStore.setState({ isAuthenticated: false, currentUser: null, successMsg: null, error: null })}
+            className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-md shadow-blue-500/10 transition-colors"
+          >
+            Logout Session
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="flex min-h-screen items-center justify-center bg-transparent">
+      <Login />
+    </div>
+  );
 }
 
-export default App
+export default App;
