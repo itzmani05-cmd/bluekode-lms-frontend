@@ -1,3 +1,4 @@
+HEAD
 # Dependencies
 node_modules/
 
@@ -14,3 +15,15 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+.idea
+.git
+.vscode
+.claude
+
+**/.DS_Store
+**/dist
+**/.vite
+**/.env
+**/node_modules
+origin/feature/setup-backend

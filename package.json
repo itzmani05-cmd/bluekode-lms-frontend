@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "web",
   "type": "module",
   "scripts": {
@@ -41,5 +42,27 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
+=======
+  "name": "bluekode-lms",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev -w packages/api & npm run dev -w packages/web",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "start": "npm run start -w packages/api & npm run start -w packages/web"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/swagger": "^11.4.4"
+>>>>>>> origin/feature/setup-backend
   }
 }
