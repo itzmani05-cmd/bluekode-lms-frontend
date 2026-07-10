@@ -95,10 +95,4 @@
       "Bash(git reset --hard *)"
     ]
   },
-  "hooks": {
-    "preEdit": [],
-    "postEdit": [],
-    "preCreate": [],
-    "postCreate": []
-  }
 }
