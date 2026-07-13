@@ -1,35 +1,38 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class QueryUserDto {
-  @ApiPropertyOptional({
-    example: 'Manikandan',
-    description: 'Search by name or email',
-  })
+  @ApiPropertyOptional({ example: 1, description: 'Page number' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({ example: 10, description: 'Items per page' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
+
+  @ApiPropertyOptional({ example: 'Manikandan', description: 'Search by name or email' })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    description: 'Role ID',
-  })
+  @ApiPropertyOptional({ example: '1', description: 'Role ID' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   roleId?: string;
 
-  @ApiPropertyOptional({
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    description: 'Institution ID',
-  })
+  @ApiPropertyOptional({ example: '1', description: 'Institution ID' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   institutionId?: string;
 
-  @ApiPropertyOptional({
-    example: 'ACTIVE',
-    description: 'User status',
-  })
+  @ApiPropertyOptional({ example: 'ACTIVE', description: 'User account status' })
   @IsOptional()
   @IsString()
   status?: string;

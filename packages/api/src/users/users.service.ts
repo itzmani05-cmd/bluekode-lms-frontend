@@ -1,80 +1,106 @@
-import { Injectable,NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { AccountStatus, Prisma } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
-import {CreateUserDto} from './dto/create-user.dto';
-import {UpdateUserDto} from './dto/update-user.dto';
-import {QueryUserDto} from './dto/query-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UsersService {
     constructor(private readonly prisma: PrismaService) {}
 
-    /**Create a new user */
     async create(createUserDto: CreateUserDto) {
+        const { password, status, roleId, institutionId, last_name, ...rest } = createUserDto;
+        const password_hash = await bcrypt.hash(password, 10);
         return this.prisma.user.create({
-            data: createUserDto
+            data: {
+                ...rest,
+                last_name:      last_name ?? '-',
+                password_hash,
+                account_status: (status ?? 'PENDING') as AccountStatus,
+            },
         });
     }
 
-    /*Get all users */
     async findAll(queryUserDto: QueryUserDto) {
-        const { page, limit, search, roleId, status, institutionId } = queryUserDto;
-        return this.prisma.user.findMany({
-            skip: (page - 1) * limit,
-            take: limit,
-            where: {
-                firstName: { contains: search },
-                lastName: { contains: search },
-                email: { contains: search },
-                roleId,
-                status,
-                institutionId
-            }
-        });
-    }
+        const { page = 1, limit = 10, search, roleId, status, institutionId } = queryUserDto;
+        const where: Prisma.UserWhereInput = {
+            is_deleted: false,
+            ...(search && {
+                OR: [
+                    { full_name: { contains: search, mode: 'insensitive' } },
+                    { last_name: { contains: search, mode: 'insensitive' } },
+                    { email:     { contains: search, mode: 'insensitive' } },
+                ],
+            }),
+            ...(status && { account_status: status as AccountStatus }),
+            ...(roleId && { userRoles: { some: { role_id: Number(roleId) } } }),
+            ...(institutionId && { studentProfile: { institution_id: Number(institutionId) } }),
+        };
 
-    /*Get a user by id */
-    async findOne(id: string) {
-        const user = await this.prisma.user.findUnique({
-            where: {id}
-        });
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
+        const [data, total] = await this.prisma.$transaction([
+            this.prisma.user.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                orderBy: { created_at: 'desc' },
+                select: {
+                    user_id:        true,
+                    full_name:      true,
+                    last_name:      true,
+                    email:          true,
+                    phone:          true,
+                    account_status: true,
+                    created_at:     true,
+                    userRoles: { select: { role: { select: { role_name: true } } } },
+                },
+            }),
+            this.prisma.user.count({ where }),
+        ]);
+
         return {
-            success:true,
-            data:user,
+            success: true,
+            data,
+            meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
     }
 
-    /*Update a user by id */
-    async update(id: string, updateUserDto: UpdateUserDto) {
-        await this.findOne(id);
+    async findOne(id: string) {
         const user = await this.prisma.user.findUnique({
-            where: { id }, data:updateUserDto
+            where: { user_id: parseInt(id) },
         });
         if (!user) {
             throw new NotFoundException('User not found');
         }
-        return {
-            success:true,
-            message:'User updated successfully',
-            data:user,
-        }
+        return { success: true, data: user };
     }
 
-    /*Delete a user by id */
+    async update(id: string, updateUserDto: UpdateUserDto) {
+        await this.findOne(id);
+        const { password, status, roleId, institutionId, ...rest } = updateUserDto;
+        const data: Prisma.UserUpdateInput = { ...rest };
+        if (password) data.password_hash = await bcrypt.hash(password, 10);
+        if (status) data.account_status = status as AccountStatus;
+        const user = await this.prisma.user.update({
+            where: { user_id: parseInt(id) },
+            data,
+        });
+        return { success: true, message: 'User updated successfully', data: user };
+    }
+
     async remove(id: string) {
         const user = await this.prisma.user.findUnique({
-            where: { id }
+            where: { user_id: parseInt(id) },
         });
         if (!user) {
             throw new NotFoundException('User not found');
         }
-        return {
-            success:true,
-            message:'User deleted successfully'
-        }
+        await this.prisma.user.update({
+            where: { user_id: parseInt(id) },
+            data: { is_deleted: true, deleted_at: new Date() },
+        });
+        return { success: true, message: 'User deleted successfully' };
     }
 }

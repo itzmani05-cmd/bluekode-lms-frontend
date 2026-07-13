@@ -19,15 +19,14 @@ export class CreateUserDto {
   full_name: string;
 
   //last name
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'M',
     description: 'Last name of the user',
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @MinLength(1)
   @MaxLength(50)
-  last_name: string;
+  last_name?: string;
 
   //email
   @ApiProperty({
@@ -63,20 +62,22 @@ export class CreateUserDto {
   phone?: string;
 
   //role id
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     description: 'Role ID',
   })
+  @IsOptional()
   @IsUUID()
-  roleId: string;
+  roleId?: string;
 
   //institution ID
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     description: 'Institution ID',
   })
+  @IsOptional()
   @IsUUID()
-  institutionId: string;
+  institutionId?: string;
 
   //status
   @ApiPropertyOptional({
