@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, BookOpen, Users, MapPin, Plus, Pencil, X, Trash2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { useAdminStore } from '../../../store/Admin';
 import type { Institution } from '../../../store/Admin';
 import { institutionSchema, type InstitutionFields } from '../../../schemas/institutionSchema';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import ManageInstitutionCoursesModal from '../../../components/ManageInstitutionCoursesModal';
 
 type InstitutionStatus = 'ACTIVE' | 'INACTIVE';
 
@@ -172,9 +173,12 @@ const EditInstitutionModal: React.FC<EditModalProps> = ({ institution, onClose }
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
-  const { institutions, institutionSearchQuery, setInstitutionSearchQuery } = useAdminStore();
+  const { institutions, isLoading, fetchInstitutions, institutionSearchQuery, setInstitutionSearchQuery } = useAdminStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingInst, setEditingInst]   = useState<Institution | null>(null);
+  const [managingCourses, setManagingCourses] = useState<Institution | null>(null);
+
+  useEffect(() => { fetchInstitutions(); }, []);
 
   const filtered = useMemo(() => {
     const q = institutionSearchQuery.toLowerCase();
@@ -258,7 +262,9 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                      <tr><td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">Loading institutions...</td></tr>
+                    ) : filtered.length === 0 ? (
                       <tr><td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">No institutions match your search.</td></tr>
                     ) : filtered.map((inst) => {
                       const sCfg = statusCfg[inst.status];
@@ -285,7 +291,10 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
                             <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${sCfg.className}`}>{sCfg.label}</span>
                           </td>
                           <td className="py-4 px-5">
-                            <div className="flex items-center justify-end">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button onClick={() => setManagingCourses(inst)} className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
+                                <BookOpen className="h-3 w-3" />Courses
+                              </button>
                               <button onClick={() => setEditingInst(inst)} className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
                                 <Pencil className="h-3 w-3" />Edit
                               </button>
@@ -306,8 +315,9 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
         </div>
       </div>
 
-      {showAddModal  && <AddInstitutionModal  onClose={() => setShowAddModal(false)} />}
-      {editingInst   && <EditInstitutionModal institution={editingInst} onClose={() => setEditingInst(null)} />}
+      {showAddModal    && <AddInstitutionModal  onClose={() => setShowAddModal(false)} />}
+      {editingInst     && <EditInstitutionModal institution={editingInst} onClose={() => setEditingInst(null)} />}
+      {managingCourses && <ManageInstitutionCoursesModal institution={managingCourses} onClose={() => setManagingCourses(null)} />}
     </div>
   );
 };

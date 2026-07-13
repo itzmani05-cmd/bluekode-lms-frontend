@@ -26,7 +26,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    useAppStore.setState({ isAuthenticated: false, currentUser: null, successMsg: null, error: null });
+    useAppStore.setState({ 
+      isAuthenticated: false, currentUser: null, successMsg: null, error: null 
+    });
   };
 
   return (
@@ -38,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
         ${collapsed ? 'w-[68px]' : 'w-64'}
       `}
     >
-      {/* ── Toggle Arrow Button ── */}
+      {/*Toggle Arrow Button*/}
       <button
         onClick={() => setCollapsed(prev => !prev)}
         className="
@@ -57,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
         }
       </button>
 
-      {/* ── Nav Items ── */}
+      {/*Nav Items*/}
       <div className="overflow-hidden">
         <nav className="p-3 space-y-1.5 mt-2">
           {navItems.map(({ key, label, Icon }) => {

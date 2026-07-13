@@ -46,14 +46,7 @@ export const Login: React.FC = () => {
           <div className="absolute top-0 inset-x-0 h-1 bg-blue-600" />
 
           <CardHeader className="text-center pb-2 pt-8">
-            <div className="flex justify-center mb-4">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-blue-600 rounded-2xl blur opacity-15 group-hover:opacity-25 transition duration-300" />
-                <div className="relative bg-blue-50 border border-blue-100 p-3 rounded-2xl text-blue-600 flex items-center justify-center">
-                  <Shield className="h-8 w-8 animate-pulse text-blue-600" />
-                </div>
-              </div>
-            </div>
+            
             <CardTitle className="text-2xl font-bold tracking-tight text-black">Bluekode LMS</CardTitle>
             <CardDescription className="text-slate-500 mt-1.5 text-xs sm:text-sm">
               Sign in with the credentials sent to your email.

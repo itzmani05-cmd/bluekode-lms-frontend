@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import emailjs from '@emailjs/browser';
@@ -8,8 +8,23 @@ import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
 import type { AccountStatus, AdminUser } from '../../../store/Admin';
-import { useAppStore } from '../../../store/login';
 import { createUserSchema, type CreateUserFields } from '../../../schemas/userSchema';
+
+const generatePassword = (): string => {
+  const upper   = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+  const lower   = 'abcdefghjkmnpqrstuvwxyz';
+  const digits  = '23456789';
+  const special = '@#$!';
+  const pool    = upper + lower + digits + special;
+  const required = [
+    upper[Math.floor(Math.random() * upper.length)],
+    lower[Math.floor(Math.random() * lower.length)],
+    digits[Math.floor(Math.random() * digits.length)],
+    special[Math.floor(Math.random() * special.length)],
+  ];
+  const rest = Array.from({ length: 6 }, () => pool[Math.floor(Math.random() * pool.length)]);
+  return [...required, ...rest].sort(() => Math.random() - 0.5).join('');
+};
 import ConfirmDialog from '../../../components/ConfirmDialog';
 
 const statusCfg: Record<AccountStatus, { label: string; className: string }> = {
@@ -47,8 +62,7 @@ const roleOptions = [
 // ── Create User Modal ─────────────────────────────────────────────────────────
 
 const CreateUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { createUser } = useAppStore();
-  const { addUser }    = useAdminStore();
+  const { addUser } = useAdminStore();
 
   const [isSending, setIsSending] = useState(false);
   const [created, setCreated]     = useState<{ email: string; password: string } | null>(null);
@@ -64,22 +78,27 @@ const CreateUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const onSubmit = async (data: CreateUserFields) => {
     setSendError('');
     setIsSending(true);
-    const password = createUser(data.email, data.role);
-    addUser(data.email, data.role, data.email.split('@')[0]);
+    const password = generatePassword();
+    const fullName = data.email.split('@')[0];
 
     try {
-      await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        { to_email: data.email, password, role: data.role, login_url: window.location.origin },
-        { publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY },
-      );
-      setEmailSent(true);
+      await addUser(data.email, data.role, fullName, password);
+      try {
+        await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+          { to_email: data.email, password, role: data.role, login_url: window.location.origin },
+          { publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY },
+        );
+        setEmailSent(true);
+      } catch {
+        setSendError('Account created but email could not be sent. Copy the credentials manually.');
+      }
+      setCreated({ email: data.email, password });
     } catch {
-      setSendError('Account created but email could not be sent. Copy the credentials manually.');
+      setSendError('Failed to create account. Please try again.');
     } finally {
       setIsSending(false);
-      setCreated({ email: data.email, password });
     }
   };
 
@@ -186,9 +205,11 @@ const CreateUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
-  const { users, userSearchQuery, userStatusFilter, setUserSearchQuery, setUserStatusFilter, updateUserStatus } = useAdminStore();
+  const { users, isLoading, fetchUsers, userSearchQuery, userStatusFilter, setUserSearchQuery, setUserStatusFilter, updateUserStatus } = useAdminStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  useEffect(() => { fetchUsers(); }, []);
 
   const changeStatus = (id: number, status: AccountStatus, message: string) => {
     setConfirm({
@@ -275,7 +296,9 @@ const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = (
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                      <tr><td colSpan={5} className="py-12 text-center text-sm text-slate-400 font-semibold">Loading users...</td></tr>
+                    ) : filtered.length === 0 ? (
                       <tr><td colSpan={5} className="py-12 text-center text-sm text-slate-400 font-semibold">No users match your search.</td></tr>
                     ) : filtered.map((user) => {
                       const sCfg = statusCfg[user.accountStatus];

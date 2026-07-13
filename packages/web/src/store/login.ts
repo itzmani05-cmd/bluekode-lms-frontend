@@ -1,76 +1,58 @@
 import { create } from 'zustand';
+import { loginApi } from '../lib/api/auth';
+import { setAuthToken, clearAuthToken } from '../lib/axios';
 
 export type UserRole = 'student' | 'trainer' | 'technical head' | 'project head' | 'admin';
 
-interface CreatedUser {
-  email:    string;
-  password: string;
-  role:     UserRole;
-}
-
 interface AuthState {
-  currentUser:  { email: string; role: string } | null;
+  currentUser:     { user_id: number; email: string; role: UserRole } | null;
   isAuthenticated: boolean;
-  isLoading:    boolean;
-  error:        string | null;
-  successMsg:   string | null;
-  createdUsers: CreatedUser[];
-  login:        (email: string, password: string) => Promise<boolean>;
-  createUser:   (email: string, role: UserRole) => string;
-  clearStatus:  () => void;
+  isLoading:       boolean;
+  error:           string | null;
+  successMsg:      string | null;
+  login:           (email: string, password: string) => Promise<boolean>;
+  logout:          () => void;
+  clearStatus:     () => void;
 }
 
-const generatePassword = (): string => {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+const normaliseRole = (apiRole: string): UserRole => {
+  const r = apiRole.toLowerCase();
+  if (r === 'admin')          return 'admin';
+  if (r === 'trainer')        return 'trainer';
+  if (r === 'technical head') return 'technical head';
+  if (r === 'project head')   return 'project head';
+  return 'student';
 };
 
-// Seeded accounts so the demo works out of the box
-const seedUsers: CreatedUser[] = [
-  { email: 'admin@bluekode.com',    password: 'Admin12345',  role: 'admin'          },
-  { email: 'trainer@company.com',   password: 'Train12345',  role: 'trainer'        },
-  { email: 'student@bluekode.com',  password: 'Stud12345',   role: 'student'        },
-  { email: 'techhead@bluekode.com', password: 'Tech12345',   role: 'technical head' },
-  { email: 'projhead@bluekode.com', password: 'Proj12345',   role: 'project head'   },
-];
-
-export const useAppStore = create<AuthState>((set, get) => ({
+export const useAppStore = create<AuthState>((set) => ({
   currentUser:     null,
   isAuthenticated: false,
   isLoading:       false,
   error:           null,
   successMsg:      null,
-  createdUsers:    seedUsers,
 
   login: async (email, password) => {
     set({ isLoading: true, error: null, successMsg: null });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const { createdUsers } = get();
-    const match = createdUsers.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-
-    if (match) {
+    try {
+      const { access_token, user } = await loginApi(email, password);
+      setAuthToken(access_token);
+      const role = normaliseRole(user.roles[0] ?? 'student');
       set({
-        currentUser:     { email: match.email, role: match.role },
+        currentUser:     { user_id: user.user_id, email: user.email, role },
         isAuthenticated: true,
         successMsg:      'Access Authorized! Redirecting...',
         isLoading:       false,
       });
       return true;
+    } catch {
+      set({ error: 'Invalid email or password.', isLoading: false });
+      return false;
     }
-
-    set({ error: 'Invalid email or password.', isLoading: false });
-    return false;
   },
 
-  createUser: (email, role) => {
-    const password = generatePassword();
-    set((state) => ({
-      createdUsers: [...state.createdUsers, { email, password, role }],
-    }));
-    return password;
+  logout: () => {
+    clearAuthToken();
+    set({ currentUser: null, isAuthenticated: false, error: null, successMsg: null });
   },
 
   clearStatus: () => set({ error: null, successMsg: null }),

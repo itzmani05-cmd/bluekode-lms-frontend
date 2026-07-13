@@ -27,7 +27,6 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
     const emailName = currentUser?.email ? currentUser.email.split('@')[0] : 'Sarah';
     const displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
 
-    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -45,18 +44,12 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
 
     return (
         <header className="w-full h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-4 sm:px-6 md:px-10 z-50 shrink-0">
-
-            {/* ── Left: Brand ── */}
-            <div className="flex items-center gap-3 shrink-0">
-                <div className="bg-blue-600/10 border border-blue-200/50 p-2 rounded-xl text-blue-600 flex items-center justify-center">
-                    <Shield className="h-5 w-5" />
-                </div>
-                <span className="text-lg font-bold text-slate-900 tracking-tight">
-                    Bluekode <span className="text-blue-600 font-semibold">LMS</span>
-                </span>
+            {/*Left*/}
+            <div className="flex items-center shrink-0">
+                <img src="/logo.svg" alt="Bluekode LMS" className="h-8 w-auto" />
             </div>
 
-            {/* ── Right: Desktop actions (sm+) ── */}
+            {/*Right*/}
             <div className="hidden sm:flex items-center gap-4">
                 <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
                     <Bell className="h-5 w-5" />
@@ -74,7 +67,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                 </div>
             </div>
 
-            {/* ── Right: Mobile three-dot menu ── */}
+            {/*Right*/}
             <div className="sm:hidden relative" ref={menuRef}>
                 <button
                     onClick={() => setMobileMenuOpen(prev => !prev)}
@@ -87,11 +80,10 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                     }
                 </button>
 
-                {/* ── Dropdown ── */}
+                {/*Dropdown*/}
                 {mobileMenuOpen && (
                     <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[100] animate-fade-in">
-
-                        {/* Profile */}
+                        {/*Profile*/}
                         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
                             <div className="h-9 w-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs ring-2 ring-blue-100 shrink-0">
                                 {displayName.slice(0, 2).toUpperCase()}
@@ -102,7 +94,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                             </div>
                         </div>
 
-                        {/* ── Navigation Items ── */}
+                        {/*Navigation Items*/}
                         <div className="border-b border-slate-100 py-1">
                             <p className="px-4 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigation</p>
                             {navItems.map(({ key, label, Icon }) => {
@@ -112,12 +104,12 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                                         key={key}
                                         onClick={() => handleNavClick(key)}
                                         className={`
-                      w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors
-                      ${isActive
+                                            w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors
+                                            ${isActive
                                                 ? 'bg-blue-50 text-blue-700 font-bold'
                                                 : 'text-slate-700 hover:bg-slate-50 font-medium'
                                             }
-                    `}
+                                        `}
                                     >
                                         <Icon className={`h-4 w-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                                         <span>{label}</span>
@@ -129,7 +121,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                             })}
                         </div>
 
-                        {/* ── Notifications ── */}
+                        {/*Notifications*/}
                         <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                             <span className="relative">
                                 <Bell className="h-4 w-4 text-slate-400" />
@@ -139,7 +131,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                             <span className="ml-auto text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5">3</span>
                         </button>
 
-                        {/* ── Support ── */}
+                        {/*Support*/}
                         <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                             <HelpCircle className="h-4 w-4 text-slate-400" />
                             <span>Support</span>

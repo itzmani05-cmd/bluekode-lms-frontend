@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BookOpen, Layers, Users, Plus, Pencil, X, Trash2 } from 'lucide-react';
@@ -212,9 +212,11 @@ const EditCourseModal: React.FC<EditModalProps> = ({ course, onClose }) => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
-  const { courses, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
+  const { courses, isLoading, fetchCourses, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
   const [showAddModal, setShowModal] = useState(false);
   const [editingCourse, setEditing]  = useState<Course | null>(null);
+
+  useEffect(() => { fetchCourses(); }, []);
 
   const filtered = useMemo(() => {
     return courses.filter((c) => {
@@ -309,7 +311,9 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                      <tr><td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">Loading courses...</td></tr>
+                    ) : filtered.length === 0 ? (
                       <tr><td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">No courses match your search.</td></tr>
                     ) : filtered.map((course, idx) => {
                       const sCfg = statusCfg[course.status];
