@@ -1,9 +1,18 @@
 import axios from 'axios';
 
-let authToken = '';
+const TOKEN_KEY = 'bluekode_token';
 
-export const setAuthToken  = (token: string) => { authToken = token; };
-export const clearAuthToken = () => { authToken = ''; };
+let authToken = localStorage.getItem(TOKEN_KEY) ?? '';
+
+export const setAuthToken = (token: string) => {
+  authToken = token;
+  localStorage.setItem(TOKEN_KEY, token);
+};
+
+export const clearAuthToken = () => {
+  authToken = '';
+  localStorage.removeItem(TOKEN_KEY);
+};
 
 const api = axios.create({
   baseURL: 'http://localhost:8000',

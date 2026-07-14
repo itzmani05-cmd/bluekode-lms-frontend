@@ -1,25 +1,11 @@
-import React, { useMemo } from 'react';
-import { Briefcase, Plus, ArrowLeftRight } from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { Briefcase, ArrowLeftRight } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
-
-type EmployeeStatus = 'ACTIVE' | 'INACTIVE';
-type Role = 'trainer' | 'technical head' | 'project head';
-
-interface Employee {
-  id: number;
-  fullName: string;
-  email: string;
-  designation: string;
-  role: Role;
-  specialization: string;
-  yearsOfExperience: number;
-  institution: string;
-  status: EmployeeStatus;
-  joiningDate: string;
-}
+import type { EmployeeStatus } from '../../../store/Admin';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 interface TrainerSubstitution {
   id: number;
@@ -29,16 +15,6 @@ interface TrainerSubstitution {
   leaveTo: string;
   reason: string;
 }
-
-const mockEmployees: Employee[] = [
-  { id: 1, fullName: 'Priya Sharma',   email: 'priya.sharma@bluekode.in',   designation: 'Senior Trainer',  role: 'trainer',        specialization: 'Data Security & Compliance',  yearsOfExperience: 6,  institution: 'TechCorp Academy',        status: 'ACTIVE',   joiningDate: 'Jan 10, 2024' },
-  { id: 2, fullName: 'Vikram Joshi',   email: 'vikram.joshi@bluekode.in',   designation: 'Technical Lead',  role: 'technical head', specialization: 'Cloud & DevOps',              yearsOfExperience: 9,  institution: 'Nexus Institute',          status: 'ACTIVE',   joiningDate: 'Feb 05, 2024' },
-  { id: 3, fullName: 'Sneha Nair',     email: 'sneha.nair@bluekode.in',     designation: 'Trainer',         role: 'trainer',        specialization: 'Agile & Project Management',  yearsOfExperience: 4,  institution: 'Synergy College',          status: 'INACTIVE', joiningDate: 'Mar 15, 2024' },
-  { id: 4, fullName: 'Rajesh Kumar',   email: 'rajesh.k@bluekode.in',       designation: 'Project Lead',    role: 'project head',   specialization: 'Network Security',            yearsOfExperience: 11, institution: 'Pioneer Training Center',   status: 'ACTIVE',   joiningDate: 'Apr 01, 2024' },
-  { id: 5, fullName: 'Ananya Iyer',    email: 'ananya.iyer@bluekode.in',    designation: 'Trainer',         role: 'trainer',        specialization: 'Python & Data Analysis',      yearsOfExperience: 5,  institution: 'TechCorp Academy',        status: 'ACTIVE',   joiningDate: 'Apr 28, 2024' },
-  { id: 6, fullName: 'Karthik Menon',  email: 'karthik.m@bluekode.in',      designation: 'Technical Lead',  role: 'technical head', specialization: 'Frontend Development',        yearsOfExperience: 7,  institution: 'Apex Skill Hub',           status: 'ACTIVE',   joiningDate: 'May 10, 2024' },
-  { id: 7, fullName: 'Suresh Babu',    email: 'suresh.b@bluekode.in',       designation: 'Senior Trainer',  role: 'trainer',        specialization: 'Ethical Hacking',             yearsOfExperience: 8,  institution: 'Nexus Institute',          status: 'INACTIVE', joiningDate: 'Jun 01, 2024' },
-];
 
 const mockSubstitutions: TrainerSubstitution[] = [
   { id: 1, originalTrainer: 'Sneha Nair',  replacementTrainer: 'Ananya Iyer',   leaveFrom: 'Jul 08, 2024', leaveTo: 'Jul 18, 2024', reason: 'Medical leave' },
@@ -50,10 +26,16 @@ const statusCfg: Record<EmployeeStatus, { label: string; className: string }> = 
   INACTIVE: { label: 'Inactive', className: 'bg-slate-100 text-slate-600 border-slate-200'      },
 };
 
-const roleCfg: Record<Role, string> = {
-  'trainer':        'bg-indigo-50 text-indigo-700 border-indigo-100',
-  'technical head': 'bg-purple-50 text-purple-700 border-purple-100',
-  'project head':   'bg-teal-50 text-teal-700 border-teal-100',
+const roleColors = [
+  'bg-indigo-50 text-indigo-700 border-indigo-100',
+  'bg-purple-50 text-purple-700 border-purple-100',
+  'bg-teal-50 text-teal-700 border-teal-100',
+  'bg-amber-50 text-amber-700 border-amber-100',
+];
+const roleColor = (role: string) => {
+  let hash = 0;
+  for (let i = 0; i < role.length; i++) hash = role.charCodeAt(i) + ((hash << 5) - hash);
+  return roleColors[Math.abs(hash) % roleColors.length];
 };
 
 const filterTabs: { key: string; label: string }[] = [
@@ -63,22 +45,28 @@ const filterTabs: { key: string; label: string }[] = [
 ];
 
 const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
-  const { employeeSearchQuery, employeeStatusFilter, setEmployeeSearchQuery, setEmployeeStatusFilter } = useAdminStore();
+  useDocumentTitle('Employees');
+  const {
+    employees, isLoading, fetchEmployees,
+    employeeSearchQuery, employeeStatusFilter, setEmployeeSearchQuery, setEmployeeStatusFilter,
+  } = useAdminStore();
+
+  useEffect(() => { fetchEmployees(); }, []);
 
   const filtered = useMemo(() => {
-    return mockEmployees.filter((e) => {
+    return employees.filter((e) => {
       const matchesStatus = employeeStatusFilter === 'all' || e.status === employeeStatusFilter;
       const q = employeeSearchQuery.toLowerCase();
       const matchesSearch = !q || e.fullName.toLowerCase().includes(q) || e.specialization.toLowerCase().includes(q) || e.institution.toLowerCase().includes(q);
       return matchesStatus && matchesSearch;
     });
-  }, [employeeSearchQuery, employeeStatusFilter]);
+  }, [employeeSearchQuery, employeeStatusFilter, employees]);
 
   const counts = useMemo(() => ({
-    all:      mockEmployees.length,
-    ACTIVE:   mockEmployees.filter(e => e.status === 'ACTIVE').length,
-    INACTIVE: mockEmployees.filter(e => e.status === 'INACTIVE').length,
-  }), []);
+    all:      employees.length,
+    ACTIVE:   employees.filter(e => e.status === 'ACTIVE').length,
+    INACTIVE: employees.filter(e => e.status === 'INACTIVE').length,
+  }), [employees]);
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
@@ -97,7 +85,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                   <span className="text-blue-600">Employees</span>
                 </nav>
                 <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Employees</h1>
-                <p className="text-sm text-slate-500 mt-1">{mockEmployees.length} employees · {counts.ACTIVE} active across all institutions.</p>
+                <p className="text-sm text-slate-500 mt-1">{employees.length} employees · {counts.ACTIVE} active across all institutions.</p>
               </div>
             </div>
 
@@ -154,7 +142,13 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
+                          Loading employees...
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
                           No employees match your search.
@@ -176,7 +170,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                             </div>
                           </td>
                           <td className="py-4 px-4">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border capitalize ${roleCfg[emp.role]}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${roleColor(emp.role)}`}>
                               {emp.role}
                             </span>
                           </td>
@@ -205,7 +199,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
               </div>
 
               <div className="px-5 py-3 border-t border-slate-100">
-                <p className="text-[11px] text-slate-400 font-semibold">Showing {filtered.length} of {mockEmployees.length} employees</p>
+                <p className="text-[11px] text-slate-400 font-semibold">Showing {filtered.length} of {employees.length} employees</p>
               </div>
             </div>
 

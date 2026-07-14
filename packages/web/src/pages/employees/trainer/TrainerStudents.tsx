@@ -3,6 +3,7 @@ import { Search, ChevronDown, ChevronUp, CheckCircle2, Circle, Clock } from 'luc
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type EnrollmentStatus  = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 type ProgressStatus    = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
@@ -97,6 +98,7 @@ const progressIconCfg: Record<ProgressStatus, { Icon: React.ElementType; classNa
 const courses = ['All Courses', 'Cybersecurity Essentials', 'Cloud Infrastructure', 'DevOps Fundamentals'];
 
 const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('My Students');
   const [search, setSearch]         = useState('');
   const [courseFilter, setCourse]   = useState('All Courses');
   const [statusFilter, setStatus]   = useState<'ALL' | EnrollmentStatus>('ALL');

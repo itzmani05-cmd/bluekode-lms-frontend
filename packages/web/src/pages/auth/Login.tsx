@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
+import { Card, CardHeader, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
-import { Shield, Eye, EyeOff, Lock, Mail, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import {Eye, EyeOff, Lock, Mail, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 import { loginSchema } from '../../schemas/login';
 import type { LoginFields } from '../../schemas/login';
 import { useAppStore } from '../../store/login';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 export const Login: React.FC = () => {
+  useDocumentTitle('Login');
   const { login, isLoading, error: storeError, successMsg, clearStatus } = useAppStore();
 
   const [email, setEmail]             = useState('');
@@ -17,7 +19,10 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors]           = useState<Partial<Record<keyof LoginFields, string>>>({});
 
-  useEffect(() => { clearStatus(); }, [clearStatus]);
+  useEffect(() => { 
+    clearStatus(); 
+  }, [clearStatus]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,14 +45,12 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col justify-between bg-gradient-to-br from-white via-slate-50 to-blue-50/40 login-page">
-      <Header />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
         <Card className="w-full max-w-md border-slate-200/80 bg-white shadow-xl shadow-slate-900/5 relative overflow-hidden transition-all duration-300 hover:border-blue-500/20">
           <div className="absolute top-0 inset-x-0 h-1 bg-blue-600" />
 
           <CardHeader className="text-center pb-2 pt-8">
-            
-            <CardTitle className="text-2xl font-bold tracking-tight text-black">Bluekode LMS</CardTitle>
+            <img src="/logo.svg" alt="Bluekode LMS" className="h-10 w-auto mx-auto mb-1" />
             <CardDescription className="text-slate-500 mt-1.5 text-xs sm:text-sm">
               Sign in with the credentials sent to your email.
             </CardDescription>

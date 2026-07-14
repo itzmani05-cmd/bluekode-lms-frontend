@@ -24,8 +24,8 @@ export const fetchUsers = () =>
   api.get<{ data: ApiUser[] }>('/users', { params: { limit: 100 } })
     .then((r) => r.data.data.map(mapUser));
 
-export const createUserApi = (email: string, password: string, full_name: string, last_name: string) =>
-  api.post('/users', { email, password, full_name, last_name }).then((r) => r.data);
+export const createUserApi = (email: string, password: string, full_name: string, last_name: string, roleName: string) =>
+  api.post('/users', { email, password, full_name, last_name, roleName }).then((r) => r.data);
 
 export const updateUserStatusApi = (id: number, status: AccountStatus) =>
   api.patch(`/users/${id}`, { status }).then((r) => r.data);

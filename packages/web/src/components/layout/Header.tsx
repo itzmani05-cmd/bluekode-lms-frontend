@@ -1,9 +1,7 @@
-import {
-    Shield, Bell, HelpCircle, Menu, X,
-    LayoutDashboard, BookOpen, FileText
-} from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, BookOpen, FileText } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../store/login';
+import logo from '../../assests/logo.svg';
 
 type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
 
@@ -46,7 +44,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
         <header className="w-full h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-4 sm:px-6 md:px-10 z-50 shrink-0">
             {/*Left*/}
             <div className="flex items-center shrink-0">
-                <img src="/logo.svg" alt="Bluekode LMS" className="h-8 w-auto" />
+                <img src={logo} alt="Bluekode LMS" className="h-8 w-auto" />
             </div>
 
             {/*Right*/}

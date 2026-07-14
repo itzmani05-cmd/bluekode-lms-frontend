@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  BookMarked, Bell, HelpCircle, Menu, X,
-  LayoutDashboard, ClipboardList, GraduationCap, BookOpen,
-} from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, ClipboardList, GraduationCap, BookOpen } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { TrainerViewType } from './TrainerSidebar';
+import logo from '../../assests/logo.svg';
 
 interface TrainerHeaderProps {
   activeTab?: TrainerViewType;
@@ -45,16 +43,9 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
     <header className="w-full h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-4 sm:px-6 md:px-10 z-50 shrink-0">
 
       {/* Brand */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="bg-emerald-600/10 border border-emerald-200/50 p-2 rounded-xl text-emerald-600 flex items-center justify-center">
-          <BookMarked className="h-5 w-5" />
-        </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-lg font-bold text-slate-900 tracking-tight">
-            Bluekode <span className="text-emerald-600 font-semibold">LMS</span>
-          </span>
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Trainer Console</span>
-        </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <img src={logo} alt="Bluekode LMS" className="h-8 w-auto" />
+        <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Trainer Console</span>
       </div>
 
       {/* Desktop right */}

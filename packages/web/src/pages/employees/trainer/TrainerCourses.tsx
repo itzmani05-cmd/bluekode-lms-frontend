@@ -6,6 +6,7 @@ import {
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type CourseStatus     = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 type LectureStatus    = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -125,6 +126,7 @@ const assignmentStatusCfg: Record<AssignmentStatus, { label: string; className: 
 };
 
 const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('My Courses');
   const [expandedCourse, setExpandedCourse] = useState<number | null>(1);
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
 

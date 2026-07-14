@@ -8,6 +8,7 @@ import { useAppStore } from '../../../store/login';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type SubmissionStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
 
@@ -82,6 +83,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, trend, iconClas
 );
 
 const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Dashboard');
   const { currentUser } = useAppStore();
   const emailName = currentUser?.email ? currentUser.email.split('@')[0] : 'Admin';
   const displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);

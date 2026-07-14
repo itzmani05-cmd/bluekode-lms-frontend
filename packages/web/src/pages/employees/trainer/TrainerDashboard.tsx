@@ -8,6 +8,7 @@ import { useAppStore } from '../../../store/login';
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 // ── Types derived from schema ─────────────────────────────────────────────────
 
@@ -143,6 +144,7 @@ interface TrainerDashboardProps {
 }
 
 const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ onViewChange, activeTab = 'trainer-dashboard' }) => {
+  useDocumentTitle('Dashboard');
   const { currentUser } = useAppStore();
   const emailName    = currentUser?.email ? currentUser.email.split('@')[0] : 'Trainer';
   const displayName  = emailName.charAt(0).toUpperCase() + emailName.slice(1);

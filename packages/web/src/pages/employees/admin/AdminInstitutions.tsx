@@ -8,6 +8,7 @@ import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
 import type { Institution } from '../../../store/Admin';
 import { institutionSchema, type InstitutionFields } from '../../../schemas/institutionSchema';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import ManageInstitutionCoursesModal from '../../../components/ManageInstitutionCoursesModal';
 
@@ -173,6 +174,7 @@ const EditInstitutionModal: React.FC<EditModalProps> = ({ institution, onClose }
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Institutions');
   const { institutions, isLoading, fetchInstitutions, institutionSearchQuery, setInstitutionSearchQuery } = useAdminStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingInst, setEditingInst]   = useState<Institution | null>(null);

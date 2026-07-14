@@ -8,6 +8,7 @@ import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
 import type { Course, CourseStatus } from '../../../store/Admin';
 import { courseSchema, courseStatusValues, type CourseFields } from '../../../schemas/courseSchema';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 
 const statusCfg: Record<CourseStatus, { label: string; className: string }> = {
@@ -212,6 +213,7 @@ const EditCourseModal: React.FC<EditModalProps> = ({ course, onClose }) => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Courses');
   const { courses, isLoading, fetchCourses, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
   const [showAddModal, setShowModal] = useState(false);
   const [editingCourse, setEditing]  = useState<Course | null>(null);

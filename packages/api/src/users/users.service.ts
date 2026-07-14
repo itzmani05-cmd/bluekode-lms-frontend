@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AccountStatus, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -12,16 +12,37 @@ export class UsersService {
     constructor(private readonly prisma: PrismaService) {}
 
     async create(createUserDto: CreateUserDto) {
-        const { password, status, roleId, institutionId, last_name, ...rest } = createUserDto;
+        const { password, status, roleId, institutionId, last_name, roleName, ...rest } = createUserDto;
         const password_hash = await bcrypt.hash(password, 10);
-        return this.prisma.user.create({
-            data: {
-                ...rest,
-                last_name:      last_name ?? '-',
-                password_hash,
-                account_status: (status ?? 'PENDING') as AccountStatus,
-            },
-        });
+        try {
+            const user = await this.prisma.user.create({
+                data: {
+                    ...rest,
+                    last_name:      last_name ?? '-',
+                    password_hash,
+                    account_status: (status ?? 'PENDING') as AccountStatus,
+                },
+            });
+
+            const resolvedRoleName = roleName ?? (roleId ? undefined : undefined);
+            if (resolvedRoleName) {
+                const role = await this.prisma.role.findFirst({
+                    where: { role_name: { equals: resolvedRoleName, mode: 'insensitive' } },
+                });
+                if (role) {
+                    await this.prisma.userRole.create({
+                        data: { user_id: user.user_id, role_id: role.role_id },
+                    });
+                }
+            }
+
+            return user;
+        } catch (e) {
+            if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+                throw new ConflictException('A user with this email already exists');
+            }
+            throw e;
+        }
     }
 
     async findAll(queryUserDto: QueryUserDto) {

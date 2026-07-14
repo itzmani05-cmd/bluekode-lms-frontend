@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Sidebar from '../../components/layout/Sidebar';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
 
@@ -52,6 +53,7 @@ const typeIcon = (type: Lesson['type'], status: Lesson['status']) => {
 };
 
 export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Learning');
   const [submissionText, setSubmissionText]     = useState('');
   const [attachedFiles, setAttachedFiles]       = useState<string[]>([]);
   const [submitted, setSubmitted]               = useState(false);

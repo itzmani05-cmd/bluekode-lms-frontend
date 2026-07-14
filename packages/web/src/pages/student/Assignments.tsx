@@ -8,10 +8,12 @@ import Sidebar from '../../components/layout/Sidebar';
 import { useStudentStore } from '../../store/Student';
 import AssignmentCard from '../../components/student/AssignmentCard';
 import type { Assignment } from '../../components/student/AssignmentCard';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 
 
 export const Assignments: React.FC<{ onViewChange?: (view: 'dashboard' | 'courses' | 'assignments') => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Assignments');
   const { assignmentSearchQuery: searchQuery, assignmentStatusFilter: statusFilter, setAssignmentSearchQuery: setSearchQuery, setAssignmentStatusFilter: setStatusFilter } = useStudentStore();
 
   const assignmentsList: Assignment[] = [

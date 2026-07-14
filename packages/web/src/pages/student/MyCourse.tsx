@@ -5,10 +5,12 @@ import Sidebar from '../../components/layout/Sidebar';
 import { useStudentStore } from '../../store/Student';
 import CourseCard from '../../components/student/CourseCard';
 import type { Course } from '../../components/student/CourseCard';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 
 
 export const MyCourse: React.FC<{ onViewChange?: (view: 'dashboard' | 'courses' | 'assignments' | 'learning') => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Course Library');
   const { courseSearchQuery: searchQuery, courseActiveTab: activeTab, setCourseSearchQuery: setSearchQuery, setCourseActiveTab: setActiveTab } = useStudentStore();
 
   const courses: Course[] = [

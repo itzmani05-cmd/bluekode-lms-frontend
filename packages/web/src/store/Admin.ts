@@ -16,6 +16,7 @@ import {
   updateInstitutionApi,
   deleteInstitutionApi,
 } from '../lib/api/institutions';
+import { fetchEmployees as apiFetchEmployees } from '../lib/api/employees';
 
 // ── Shared types ──────────────────────────────────────────────────────────────
 
@@ -55,6 +56,21 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export type EmployeeStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface Employee {
+  id: number;
+  fullName: string;
+  email: string;
+  designation: string;
+  role: string;
+  specialization: string;
+  yearsOfExperience: number;
+  institution: string;
+  status: EmployeeStatus;
+  joiningDate: string;
+}
+
 // ── Store type ────────────────────────────────────────────────────────────────
 
 type AdminState = {
@@ -78,6 +94,7 @@ type AdminState = {
   institutions: Institution[];
   courses:      Course[];
   users:        AdminUser[];
+  employees:    Employee[];
 
   // Filter setters
   setUserSearchQuery:         (q: string) => void;
@@ -95,6 +112,7 @@ type AdminState = {
   fetchInstitutions: () => Promise<void>;
   fetchCourses:      () => Promise<void>;
   fetchUsers:        () => Promise<void>;
+  fetchEmployees:    () => Promise<void>;
 
   // Institution actions
   addInstitution:    (inst: Omit<Institution, 'id' | 'coursesAssigned' | 'employeesAssigned' | 'studentsEnrolled' | 'status' | 'createdAt'>) => Promise<void>;
@@ -133,6 +151,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   institutions: [],
   courses:      [],
   users:        [],
+  employees:    [],
 
   // Filter setters
   setUserSearchQuery:         (userSearchQuery)         => set({ userSearchQuery }),
@@ -175,6 +194,16 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       set({ users, isLoading: false });
     } catch {
       set({ error: 'Failed to load users.', isLoading: false });
+    }
+  },
+
+  fetchEmployees: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const employees = await apiFetchEmployees();
+      set({ employees, isLoading: false });
+    } catch {
+      set({ error: 'Failed to load employees.', isLoading: false });
     }
   },
 
@@ -242,16 +271,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   // ── User actions ──────────────────────────────────────────────────────────────
 
-  addUser: async (email, _role, fullName, password) => {
+  addUser: async (email, role, fullName, password) => {
     const [firstName, ...rest] = fullName.split(' ');
     const lastName = rest.join(' ') || '-';
     try {
-      await createUserApi(email, password, firstName, lastName);
+      await createUserApi(email, password, firstName, lastName, role);
       const users = await apiFetchUsers();
       set({ users, error: null });
-    } catch {
-      set({ error: 'Failed to create user.' });
-      throw new Error('Failed to create user.');
+    } catch (e) {
+      const message =
+        (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to create user.';
+      set({ error: message });
+      throw new Error(message);
     }
   },
 

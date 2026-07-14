@@ -6,6 +6,7 @@ import {
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type SubmissionStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
 
@@ -153,6 +154,7 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ submission, onClose }) => {
 };
 
 const TrainerSubmissions: React.FC<{ onViewChange?: (view: TrainerViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Submissions');
   const [activeFilter, setActiveFilter] = useState<'ALL' | SubmissionStatus>('ALL');
   const [search, setSearch]             = useState('');
   const [selected, setSelected]         = useState<Submission | null>(null);

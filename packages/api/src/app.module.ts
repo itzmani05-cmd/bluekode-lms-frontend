@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { InstitutionsModule } from './institutions/institutions.module';
 import { CoursesModule } from './courses/courses.module';
 import { InstitutionCoursesModule } from './institution-courses/institution-courses.module';
+import { EmployeeProfilesModule } from './employee-profiles/employee-profiles.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { InstitutionCoursesModule } from './institution-courses/institution-cour
     InstitutionsModule,
     CoursesModule,
     InstitutionCoursesModule,
+    EmployeeProfilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

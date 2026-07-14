@@ -12,8 +12,10 @@ import {
 import { useAppStore } from '../../store/login';
 import Header from "../../components/layout/Header";
 import Sidebar from "../../components/layout/Sidebar";
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 export const StudentDashboard: React.FC<{ onViewChange?: (view: 'dashboard' | 'courses' | 'assignments') => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Dashboard');
   const { currentUser } = useAppStore();
   
   const emailName = currentUser?.email ? currentUser.email.split('@')[0] : 'Sarah';

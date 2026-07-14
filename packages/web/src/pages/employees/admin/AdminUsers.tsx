@@ -9,6 +9,7 @@ import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
 import type { AccountStatus, AdminUser } from '../../../store/Admin';
 import { createUserSchema, type CreateUserFields } from '../../../schemas/userSchema';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 const generatePassword = (): string => {
   const upper   = 'ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -205,6 +206,7 @@ const CreateUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('User Management');
   const { users, isLoading, fetchUsers, userSearchQuery, userStatusFilter, setUserSearchQuery, setUserStatusFilter, updateUserStatus } = useAdminStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);

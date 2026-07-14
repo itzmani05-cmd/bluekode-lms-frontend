@@ -4,6 +4,7 @@ import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type FormStatus       = 'PENDING' | 'SUBMITTED' | 'VERIFIED';
 type EnrollmentStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
@@ -48,6 +49,7 @@ const enrollmentCfg: Record<EnrollmentStatus, { label: string; className: string
 const institutions = ['All Institutions', ...Array.from(new Set(mockStudents.map(s => s.institution)))];
 
 const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
+  useDocumentTitle('Students');
   const {
     studentSearchQuery, studentFormStatusFilter, studentEnrollmentFilter,
     setStudentSearchQuery, setStudentFormStatusFilter, setStudentEnrollmentFilter,

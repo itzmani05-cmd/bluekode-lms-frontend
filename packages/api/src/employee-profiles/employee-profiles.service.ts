@@ -23,7 +23,17 @@ const EMPLOYEE_PROFILE_SELECT = {
   created_at: true,
   updated_at: true,
   user: {
-    select: { user_id: true, full_name: true, last_name: true, email: true },
+    select: {
+      user_id: true,
+      full_name: true,
+      last_name: true,
+      email: true,
+      userRoles: { select: { role: { select: { role_name: true } } } },
+    },
+  },
+  employeeInstitutions: {
+    where: { status: 'ACTIVE' },
+    select: { institution: { select: { institution_id: true, institution_name: true } } },
   },
 } satisfies Prisma.EmployeeProfileSelect;
 

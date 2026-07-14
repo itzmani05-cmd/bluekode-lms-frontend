@@ -70,6 +70,12 @@ export class CreateUserDto {
   @IsUUID()
   roleId?: string;
 
+  //role name (used to look up role_id when roleId is not provided)
+  @ApiPropertyOptional({ example: 'trainer', description: 'Role name' })
+  @IsOptional()
+  @IsString()
+  roleName?: string;
+
   //institution ID
   @ApiPropertyOptional({
     example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
