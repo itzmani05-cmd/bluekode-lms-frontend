@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  BookOpen, 
-  FileText, 
-  Settings, 
+import {
+  BookOpen,
+  FileText,
+  Settings,
   LogOut,
   LayoutDashboard,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
+import logo from '../../assests/logo.jpeg';
 
 interface SidebarProps {
   activeTab: 'dashboard' | 'courses' | 'assignments' | 'learning';
@@ -61,6 +62,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
 
       {/*Nav Items*/}
       <div className="overflow-hidden">
+        {!collapsed && (
+          <div className="px-4 pt-4 pb-2">
+            <img src={logo} alt="Bluekode LMS" className="h-7 w-auto brightness-0 invert" />
+          </div>
+        )}
         <nav className="p-3 space-y-1.5 mt-2">
           {navItems.map(({ key, label, Icon }) => {
             const isActive = activeTab === key;

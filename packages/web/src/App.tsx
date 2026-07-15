@@ -10,7 +10,8 @@ import AdminUsers from './pages/employees/admin/AdminUsers';
 import AdminInstitutions from './pages/employees/admin/AdminInstitutions';
 import AdminCourses from './pages/employees/admin/AdminCourses';
 import AdminStudents from './pages/employees/admin/AdminStudents';
-import AdminEmployees from './pages/employees/admin/AdminEmployees';
+import AdminEmployees    from './pages/employees/admin/AdminEmployees';
+import AdminCourseDetail from './pages/employees/admin/AdminCourseDetail';
 import TrainerDashboard   from './pages/employees/trainer/TrainerDashboard';
 import TrainerSubmissions from './pages/employees/trainer/TrainerSubmissions';
 import TrainerStudents    from './pages/employees/trainer/TrainerStudents';
@@ -41,6 +42,7 @@ function App() {
       if (adminView === 'admin-courses')      return <AdminCourses      onViewChange={setAdminView} />;
       if (adminView === 'admin-students')     return <AdminStudents     onViewChange={setAdminView} />;
       if (adminView === 'admin-employees')    return <AdminEmployees    onViewChange={setAdminView} />;
+      if (adminView === 'admin-course-detail') return <AdminCourseDetail onViewChange={setAdminView} />;
       return <AdminDashboard onViewChange={setAdminView} />;
     }
 
@@ -51,7 +53,6 @@ function App() {
       return <TrainerDashboard onViewChange={setTrainerView} activeTab={trainerView} />;
     }
 
-    // Fallback for technical head / project head roles
     return (
       <div className="min-h-screen w-full flex flex-col justify-between bg-slate-50">
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BookOpen, Layers, Users, Plus, Pencil, X, Trash2 } from 'lucide-react';
+import { BookOpen, Layers, Users, Plus, Pencil, X, Trash2, Settings2 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
@@ -214,7 +214,7 @@ const EditCourseModal: React.FC<EditModalProps> = ({ course, onClose }) => {
 
 const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Courses');
-  const { courses, isLoading, fetchCourses, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
+  const { courses, isLoading, fetchCourses, setSelectedCourseId, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
   const [showAddModal, setShowModal] = useState(false);
   const [editingCourse, setEditing]  = useState<Course | null>(null);
 
@@ -351,7 +351,13 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
                             <span className="text-[11px] text-slate-500 font-semibold">{course.createdAt}</span>
                           </td>
                           <td className="py-4 px-5">
-                            <div className="flex items-center justify-end">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => { setSelectedCourseId(course.id); onViewChange?.('admin-course-detail'); }}
+                                className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-extrabold border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1"
+                              >
+                                <Settings2 className="h-3 w-3" />Manage
+                              </button>
                               <button onClick={() => setEditing(course)} className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
                                 <Pencil className="h-3 w-3" />Edit
                               </button>

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, HelpCircle, Menu, X, LayoutDashboard, ClipboardList, GraduationCap, BookOpen } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { TrainerViewType } from './TrainerSidebar';
-import logo from '../../assests/logo.svg';
+import logo from '../../assests/logo.jpeg';
 
 interface TrainerHeaderProps {
   activeTab?: TrainerViewType;
@@ -45,7 +45,6 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
       {/* Brand */}
       <div className="flex items-center gap-2 shrink-0">
         <img src={logo} alt="Bluekode LMS" className="h-8 w-auto" />
-        <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Trainer Console</span>
       </div>
 
       {/* Desktop right */}

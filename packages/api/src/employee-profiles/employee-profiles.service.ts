@@ -80,12 +80,17 @@ export class EmployeeProfilesService {
   async findAll(dto: QueryEmployeeProfileDto) {
     const { page = 1, limit = 20, search, isActive } = dto;
 
+    // Auto-create missing profiles for any existing staff users
+    await this.backfillMissingProfiles();
+
     const where: Prisma.EmployeeProfileWhereInput = {
       ...(isActive !== undefined && { is_active: isActive }),
       ...(search && {
         OR: [
           { designation: { contains: search, mode: 'insensitive' } },
           { specialization: { contains: search, mode: 'insensitive' } },
+          { user: { full_name: { contains: search, mode: 'insensitive' } } },
+          { user: { last_name: { contains: search, mode: 'insensitive' } } },
         ],
       }),
     };
@@ -106,6 +111,31 @@ export class EmployeeProfilesService {
       data,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  private async backfillMissingProfiles() {
+    const staffUsersWithoutProfile = await this.prisma.user.findMany({
+      where: {
+        is_deleted: false,
+        employeeProfile: null,
+        userRoles: {
+          some: {
+            role: { role_name: { in: STAFF_ROLES, mode: 'insensitive' } },
+          },
+        },
+      },
+      select: { user_id: true },
+    });
+
+    if (staffUsersWithoutProfile.length === 0) return;
+
+    await this.prisma.employeeProfile.createMany({
+      data: staffUsersWithoutProfile.map((u) => ({
+        user_id: u.user_id,
+        is_active: true,
+      })),
+      skipDuplicates: true,
+    });
   }
 
   async findOne(id: number) {

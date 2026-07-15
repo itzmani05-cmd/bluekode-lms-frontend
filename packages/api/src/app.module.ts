@@ -9,6 +9,8 @@ import { InstitutionsModule } from './institutions/institutions.module';
 import { CoursesModule } from './courses/courses.module';
 import { InstitutionCoursesModule } from './institution-courses/institution-courses.module';
 import { EmployeeProfilesModule } from './employee-profiles/employee-profiles.module';
+import { ModulesModule } from './modules/modules.module';
+import { LecturesModule } from './lectures/lectures.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { EmployeeProfilesModule } from './employee-profiles/employee-profiles.mo
     CoursesModule,
     InstitutionCoursesModule,
     EmployeeProfilesModule,
+    ModulesModule,
+    LecturesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

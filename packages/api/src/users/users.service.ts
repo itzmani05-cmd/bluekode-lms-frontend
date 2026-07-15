@@ -7,6 +7,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 
+const STAFF_ROLES = ['trainer', 'technical head', 'project head'];
+
 @Injectable()
 export class UsersService {
     constructor(private readonly prisma: PrismaService) {}
@@ -33,6 +35,12 @@ export class UsersService {
                     await this.prisma.userRole.create({
                         data: { user_id: user.user_id, role_id: role.role_id },
                     });
+
+                    if (STAFF_ROLES.includes(resolvedRoleName.toLowerCase())) {
+                        await this.prisma.employeeProfile.create({
+                            data: { user_id: user.user_id, is_active: true },
+                        });
+                    }
                 }
             }
 

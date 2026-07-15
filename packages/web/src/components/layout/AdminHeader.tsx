@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, HelpCircle, Menu, X, LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Briefcase } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { AdminViewType } from './AdminSidebar';
-import logo from '../../assests/logo.svg';
+import logo from '../../assests/logo.jpeg';
 
 interface AdminHeaderProps {
   activeTab?: AdminViewType;
@@ -47,7 +47,6 @@ const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
       {/* ── Left: Brand ── */}
       <div className="flex items-center gap-2 shrink-0">
         <img src={logo} alt="Bluekode LMS" className="h-8 w-auto" />
-        <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Admin Console</span>
       </div>
 
       {/* ── Right: Desktop ── */}

@@ -9,6 +9,7 @@ import { loginSchema } from '../../schemas/login';
 import type { LoginFields } from '../../schemas/login';
 import { useAppStore } from '../../store/login';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import logo from '../../assests/logo.jpeg';
 
 export const Login: React.FC = () => {
   useDocumentTitle('Login');
@@ -50,7 +51,7 @@ export const Login: React.FC = () => {
           <div className="absolute top-0 inset-x-0 h-1 bg-blue-600" />
 
           <CardHeader className="text-center pb-2 pt-8">
-            <img src="/logo.svg" alt="Bluekode LMS" className="h-10 w-auto mx-auto mb-1" />
+            <img src={logo} alt="Bluekode LMS" className="h-10 w-auto mx-auto mb-1" />
             <CardDescription className="text-slate-500 mt-1.5 text-xs sm:text-sm">
               Sign in with the credentials sent to your email.
             </CardDescription>

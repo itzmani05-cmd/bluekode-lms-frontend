@@ -5,12 +5,14 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
+import logo from '../../assests/logo.jpeg';
 
 export type AdminViewType =
   | 'admin-dashboard'
   | 'admin-users'
   | 'admin-institutions'
   | 'admin-courses'
+  | 'admin-course-detail'
   | 'admin-students'
   | 'admin-employees';
 
@@ -64,13 +66,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewCha
 
       <div className="overflow-hidden">
         {!collapsed && (
-          <div className="px-4 pt-5 pb-2">
-            <span className="text-[9px] font-extrabold text-white/40 uppercase tracking-widest">Admin Console</span>
+          <div className="px-4 pt-4 pb-2">
+            <img src={logo} alt="Bluekode LMS" className="h-7 w-auto brightness-0 invert" />
           </div>
         )}
         <nav className={`p-3 space-y-1.5 ${collapsed ? 'mt-8' : 'mt-1'}`}>
           {navItems.map(({ key, label, Icon }) => {
-            const isActive = activeTab === key;
+            const isActive = activeTab === key ||
+              (key === 'admin-courses' && activeTab === 'admin-course-detail');
             return (
               <button
                 key={key}

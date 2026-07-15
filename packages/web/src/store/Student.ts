@@ -17,7 +17,6 @@ interface AssignmentsState {
 type StudentState = CoursesState & AssignmentsState;
 
 export const useStudentStore = create<StudentState>((set) => ({
-  
   courseSearchQuery: '',
   courseActiveTab: 'all',
   setCourseSearchQuery: (query) => set({ courseSearchQuery: query }),
@@ -27,6 +26,4 @@ export const useStudentStore = create<StudentState>((set) => ({
   assignmentStatusFilter: 'all',
   setAssignmentSearchQuery: (query) => set({ assignmentSearchQuery: query }),
   setAssignmentStatusFilter: (filter) => set({ assignmentStatusFilter: filter }),
-
-
 }));

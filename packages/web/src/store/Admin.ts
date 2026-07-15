@@ -17,8 +17,21 @@ import {
   deleteInstitutionApi,
 } from '../lib/api/institutions';
 import { fetchEmployees as apiFetchEmployees } from '../lib/api/employees';
+import {
+  fetchModulesApi, createModuleApi, updateModuleApi, deleteModuleApi,
+} from '../lib/api/modules';
+import type { CourseModule } from '../lib/api/modules';
+import {
+  fetchLecturesApi, createLectureApi, updateLectureApi, deleteLectureApi,
+} from '../lib/api/lectures';
+import type { Lesson, CreateLessonPayload, UpdateLessonPayload } from '../lib/api/lectures';
 
-// ── Shared types ──────────────────────────────────────────────────────────────
+//Shared types
+
+export type ContentType  = 'LECTURE' | 'ASSIGNMENT';
+export type LessonStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+export type { CourseModule, Lesson, CreateLessonPayload, UpdateLessonPayload };
 
 export type InstitutionStatus = 'ACTIVE' | 'INACTIVE';
 export type CourseStatus      = 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
@@ -91,10 +104,14 @@ type AdminState = {
   employeeStatusFilter:     string;
 
   // Data
-  institutions: Institution[];
-  courses:      Course[];
-  users:        AdminUser[];
-  employees:    Employee[];
+  institutions:    Institution[];
+  courses:         Course[];
+  users:           AdminUser[];
+  employees:       Employee[];
+  selectedCourseId: number | null;
+  modules:         CourseModule[];
+  lessons:         Record<number, Lesson[]>;
+  modulesLoading:  boolean;
 
   // Filter setters
   setUserSearchQuery:         (q: string) => void;
@@ -108,11 +125,25 @@ type AdminState = {
   setEmployeeSearchQuery:     (q: string) => void;
   setEmployeeStatusFilter:    (f: string) => void;
 
+  setSelectedCourseId: (id: number | null) => void;
+
   // Fetch actions
   fetchInstitutions: () => Promise<void>;
   fetchCourses:      () => Promise<void>;
   fetchUsers:        () => Promise<void>;
   fetchEmployees:    () => Promise<void>;
+  fetchModules:      (courseId: number) => Promise<void>;
+  fetchLessons:      (moduleId: number) => Promise<void>;
+
+  // Module actions
+  addModule:    (courseId: number, name: string, description?: string) => Promise<void>;
+  updateModule: (id: number, name: string, description?: string) => Promise<void>;
+  deleteModule: (id: number) => Promise<void>;
+
+  // Lesson actions
+  addLesson:    (moduleId: number, payload: CreateLessonPayload) => Promise<void>;
+  updateLesson: (id: number, moduleId: number, payload: UpdateLessonPayload) => Promise<void>;
+  deleteLesson: (id: number, moduleId: number) => Promise<void>;
 
   // Institution actions
   addInstitution:    (inst: Omit<Institution, 'id' | 'coursesAssigned' | 'employeesAssigned' | 'studentsEnrolled' | 'status' | 'createdAt'>) => Promise<void>;
@@ -148,10 +179,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   employeeStatusFilter:     'all',
 
   // Data (empty — populated by fetch actions)
-  institutions: [],
-  courses:      [],
-  users:        [],
-  employees:    [],
+  institutions:     [],
+  courses:          [],
+  users:            [],
+  employees:        [],
+  selectedCourseId: null,
+  modules:          [],
+  lessons:          {},
+  modulesLoading:   false,
 
   // Filter setters
   setUserSearchQuery:         (userSearchQuery)         => set({ userSearchQuery }),
@@ -202,9 +237,80 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     try {
       const employees = await apiFetchEmployees();
       set({ employees, isLoading: false });
-    } catch {
+    } catch (err) {
+      console.error('[fetchEmployees]', err);
       set({ error: 'Failed to load employees.', isLoading: false });
     }
+  },
+
+  setSelectedCourseId: (selectedCourseId) => set({ selectedCourseId, modules: [], lessons: {} }),
+
+  fetchModules: async (courseId) => {
+    set({ modulesLoading: true });
+    try {
+      const modules = await fetchModulesApi(courseId);
+      set({ modules, modulesLoading: false });
+    } catch (err) {
+      console.error('[fetchModules]', err);
+      set({ modulesLoading: false });
+    }
+  },
+
+  fetchLessons: async (moduleId) => {
+    try {
+      const lessons = await fetchLecturesApi(moduleId);
+      set((s) => ({ lessons: { ...s.lessons, [moduleId]: lessons } }));
+    } catch (err) {
+      console.error('[fetchLessons]', err);
+    }
+  },
+
+  addModule: async (courseId, name, description) => {
+    await createModuleApi(courseId, name, description);
+    const modules = await fetchModulesApi(courseId);
+    set({ modules });
+  },
+
+  updateModule: async (id, name, description) => {
+    await updateModuleApi(id, name, description);
+    const courseId = (get() as AdminState).selectedCourseId!;
+    const modules  = await fetchModulesApi(courseId);
+    set({ modules });
+  },
+
+  deleteModule: async (id) => {
+    await deleteModuleApi(id);
+    set((s) => {
+      const lessons = { ...s.lessons };
+      delete lessons[id];
+      return { modules: s.modules.filter((m) => m.id !== id), lessons };
+    });
+  },
+
+  addLesson: async (moduleId, payload) => {
+    await createLectureApi(moduleId, payload);
+    const lessons = await fetchLecturesApi(moduleId);
+    set((s) => ({ lessons: { ...s.lessons, [moduleId]: lessons } }));
+    // refresh module list so lectureCount updates
+    const courseId = (get() as AdminState).selectedCourseId!;
+    const modules  = await fetchModulesApi(courseId);
+    set({ modules });
+  },
+
+  updateLesson: async (id, moduleId, payload) => {
+    await updateLectureApi(id, payload);
+    const lessons = await fetchLecturesApi(moduleId);
+    set((s) => ({ lessons: { ...s.lessons, [moduleId]: lessons } }));
+  },
+
+  deleteLesson: async (id, moduleId) => {
+    await deleteLectureApi(id);
+    set((s) => ({
+      lessons: { ...s.lessons, [moduleId]: (s.lessons[moduleId] ?? []).filter((l) => l.id !== id) },
+    }));
+    const courseId = (get() as AdminState).selectedCourseId!;
+    const modules  = await fetchModulesApi(courseId);
+    set({ modules });
   },
 
   // ── Institution actions ───────────────────────────────────────────────────────

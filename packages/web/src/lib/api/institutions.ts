@@ -32,10 +32,10 @@ export const fetchInstitutions = () =>
     .then((r) => r.data.data.map(mapInstitution));
 
 export const createInstitutionApi = (name: string, address: string, city: string) =>
-  api.post('/institutions', { name, address, city }).then((r) => r.data);
+  api.post('/institutions', { institutionName: name, address, city }).then((r) => r.data);
 
 export const updateInstitutionApi = (id: number, name: string, address: string, city: string) =>
-  api.patch(`/institutions/${id}`, { name, address, city }).then((r) => r.data);
+  api.patch(`/institutions/${id}`, { institutionName: name, address, city }).then((r) => r.data);
 
 export const deleteInstitutionApi = (id: number) =>
   api.delete(`/institutions/${id}`).then((r) => r.data);

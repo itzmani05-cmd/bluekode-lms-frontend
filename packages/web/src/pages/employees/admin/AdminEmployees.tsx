@@ -47,7 +47,7 @@ const filterTabs: { key: string; label: string }[] = [
 const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Employees');
   const {
-    employees, isLoading, fetchEmployees,
+    employees, isLoading, error, fetchEmployees,
     employeeSearchQuery, employeeStatusFilter, setEmployeeSearchQuery, setEmployeeStatusFilter,
   } = useAdminStore();
 
@@ -146,6 +146,18 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                       <tr>
                         <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
                           Loading employees...
+                        </td>
+                      </tr>
+                    ) : error ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-sm text-red-500 font-semibold">
+                          {error}
+                        </td>
+                      </tr>
+                    ) : employees.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
+                          No employee profiles found. Create employee profiles from the Users page.
                         </td>
                       </tr>
                     ) : filtered.length === 0 ? (
