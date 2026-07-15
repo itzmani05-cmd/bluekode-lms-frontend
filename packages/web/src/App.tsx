@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useAppStore } from './store/login';
-import Login from './pages/auth/Login';
+import Login            from './pages/auth/Login';
+import ChangePassword   from './pages/auth/ChangePassword';
+import CompleteProfile  from './pages/auth/CompleteProfile';
 import StudentDashboard from './pages/student/StudentDashboard';
-import MyCourse from './pages/student/MyCourse';
-import Assignments from './pages/student/Assignments';
-import Learning from './pages/student/Learning';
+import MyCourse         from './pages/student/MyCourse';
+import Assignments      from './pages/student/Assignments';
+import Learning         from './pages/student/Learning';
+import StudentSettings  from './pages/student/StudentSettings';
 import AdminDashboard from './pages/employees/admin/AdminDashboard';
 import AdminUsers from './pages/employees/admin/AdminUsers';
 import AdminInstitutions from './pages/employees/admin/AdminInstitutions';
@@ -19,7 +22,7 @@ import TrainerCourses     from './pages/employees/trainer/TrainerCourses';
 import type { AdminViewType }   from './components/layout/AdminSidebar';
 import type { TrainerViewType } from './components/layout/TrainerSidebar';
 
-type StudentViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
+type StudentViewType = 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
 
 function App() {
   const { isAuthenticated, currentUser } = useAppStore();
@@ -29,10 +32,15 @@ function App() {
 
   if (isAuthenticated && currentUser) {
 
+    // Onboarding gate — must run before role-based routing
+    if (currentUser.accountStatus === 'PENDING')  return <ChangePassword />;
+    if (currentUser.accountStatus === 'APPROVED') return <CompleteProfile />;
+
     if (currentUser.role === 'student') {
-      if (studentView === 'courses')     return <MyCourse    onViewChange={setStudentView} />;
-      if (studentView === 'assignments') return <Assignments onViewChange={setStudentView} />;
-      if (studentView === 'learning')    return <Learning    onViewChange={setStudentView} />;
+      if (studentView === 'courses')     return <MyCourse        onViewChange={setStudentView} />;
+      if (studentView === 'assignments') return <Assignments     onViewChange={setStudentView} />;
+      if (studentView === 'learning')    return <Learning        onViewChange={setStudentView} />;
+      if (studentView === 'settings')    return <StudentSettings onViewChange={setStudentView} />;
       return <StudentDashboard onViewChange={setStudentView} />;
     }
 

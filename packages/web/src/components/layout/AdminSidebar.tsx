@@ -65,12 +65,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewCha
       </button>
 
       <div className="overflow-hidden">
-        {!collapsed && (
-          <div className="px-4 pt-4 pb-2">
-            <img src={logo} alt="Bluekode LMS" className="h-7 w-auto brightness-0 invert" />
-          </div>
-        )}
-        <nav className={`p-3 space-y-1.5 ${collapsed ? 'mt-8' : 'mt-1'}`}>
+       
+        <nav className={`p-3 space-y-1.5 ${collapsed ? 'mt-4' : 'mt-1'}`}>
           {navItems.map(({ key, label, Icon }) => {
             const isActive = activeTab === key ||
               (key === 'admin-courses' && activeTab === 'admin-course-detail');
@@ -80,7 +76,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewCha
                 onClick={() => onViewChange?.(key)}
                 title={collapsed ? label : undefined}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
+                  w-full flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold
                   transition-all duration-200
                   ${isActive
                     ? 'bg-white/10 text-white shadow-sm border border-white/5'

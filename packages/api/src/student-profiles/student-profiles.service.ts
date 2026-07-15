@@ -45,7 +45,7 @@ export class StudentProfilesService {
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const isStudent = user.userRoles.some((ur) => ur.role.role_name === 'Student');
+    const isStudent = user.userRoles.some((ur) => ur.role.role_name.toLowerCase() === 'student');
     if (!isStudent) {
       throw new BadRequestException('User does not have the Student role');
     }
@@ -79,7 +79,14 @@ export class StudentProfilesService {
     const where: Prisma.StudentProfileWhereInput = {
       ...(institutionId && { institution_id: institutionId }),
       ...(formStatus && { form_status: formStatus as FormStatus }),
-      ...(search && { department: { contains: search, mode: 'insensitive' } }),
+      ...(search && {
+        OR: [
+          { department: { contains: search, mode: 'insensitive' } },
+          { user: { full_name: { contains: search, mode: 'insensitive' } } },
+          { user: { last_name: { contains: search, mode: 'insensitive' } } },
+          { user: { email:     { contains: search, mode: 'insensitive' } } },
+        ],
+      }),
     };
 
     const [data, total] = await this.prisma.$transaction([

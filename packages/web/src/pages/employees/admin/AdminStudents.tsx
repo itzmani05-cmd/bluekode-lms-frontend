@@ -1,72 +1,376 @@
-import React, { useMemo } from 'react';
-import { GraduationCap } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  GraduationCap, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle, Building2,
+} from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
+import type { AdminStudentProfile, StudentFormStatus } from '../../../store/Admin';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
-type FormStatus       = 'PENDING' | 'SUBMITTED' | 'VERIFIED';
-type EnrollmentStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-interface Student {
-  id: number;
-  fullName: string;
-  email: string;
-  institution: string;
-  department: string;
-  academicYear: number;
-  formStatus: FormStatus;
-  enrollmentStatus: EnrollmentStatus;
+const FORM_STATUSES: StudentFormStatus[] = ['PENDING', 'SUBMITTED', 'VERIFIED'];
+
+const formStatusCfg: Record<StudentFormStatus, { label: string; cls: string }> = {
+  PENDING:   { label: 'Pending',   cls: 'bg-amber-50  text-amber-700  border-amber-100'       },
+  SUBMITTED: { label: 'Submitted', cls: 'bg-blue-50   text-blue-700   border-blue-100'        },
+  VERIFIED:  { label: 'Verified',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-100'   },
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const inputCls = (err?: boolean) =>
+  `w-full px-3 py-2.5 border rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all ${
+    err ? 'border-red-300 focus:ring-red-400/10' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10'
+  }`;
+
+const labelCls = 'text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5';
+
+// ── Create Modal ──────────────────────────────────────────────────────────────
+
+interface CreateModalProps {
+  onClose: () => void;
 }
 
-const mockStudents: Student[] = [
-  { id: 1,  fullName: 'Arjun Mehta',    email: 'arjun.mehta@techcorp.in',    institution: 'TechCorp Academy',       department: 'Computer Science',      academicYear: 2, formStatus: 'VERIFIED',  enrollmentStatus: 'IN_PROGRESS' },
-  { id: 2,  fullName: 'Kavya Reddy',    email: 'kavya.reddy@nexus.in',       institution: 'Nexus Institute',        department: 'Information Technology', academicYear: 3, formStatus: 'SUBMITTED', enrollmentStatus: 'ASSIGNED'    },
-  { id: 3,  fullName: 'Aditya Singh',   email: 'aditya.singh@pioneer.in',    institution: 'Pioneer Training Center',department: 'Electronics',           academicYear: 1, formStatus: 'PENDING',   enrollmentStatus: 'ASSIGNED'    },
-  { id: 4,  fullName: 'Meera Krishnan', email: 'meera.k@techcorp.in',        institution: 'TechCorp Academy',       department: 'Cybersecurity',          academicYear: 2, formStatus: 'VERIFIED',  enrollmentStatus: 'COMPLETED'   },
-  { id: 5,  fullName: 'Siddharth Rao',  email: 'sid.rao@nexus.in',           institution: 'Nexus Institute',        department: 'Data Science',           academicYear: 2, formStatus: 'VERIFIED',  enrollmentStatus: 'IN_PROGRESS' },
-  { id: 6,  fullName: 'Pooja Menon',    email: 'pooja.m@synergy.in',         institution: 'Synergy College',        department: 'Computer Science',       academicYear: 1, formStatus: 'PENDING',   enrollmentStatus: 'ASSIGNED'    },
-  { id: 7,  fullName: 'Dev Patel',      email: 'dev.patel@nexus.in',         institution: 'Nexus Institute',        department: 'Software Engineering',   academicYear: 3, formStatus: 'SUBMITTED', enrollmentStatus: 'CANCELLED'   },
-  { id: 8,  fullName: 'Riya Shah',      email: 'riya.shah@apex.in',          institution: 'Apex Skill Hub',         department: 'Information Technology', academicYear: 2, formStatus: 'VERIFIED',  enrollmentStatus: 'COMPLETED'   },
-  { id: 9,  fullName: 'Nisha Verma',    email: 'nisha.v@pioneer.in',         institution: 'Pioneer Training Center',department: 'Network Engineering',    academicYear: 1, formStatus: 'PENDING',   enrollmentStatus: 'ASSIGNED'    },
-  { id: 10, fullName: 'Rahul Iyer',     email: 'rahul.iyer@techcorp.in',     institution: 'TechCorp Academy',       department: 'Cloud Computing',        academicYear: 3, formStatus: 'VERIFIED',  enrollmentStatus: 'IN_PROGRESS' },
-];
+const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
+  const { users, institutions, createStudentProfile, isLoading, error } = useAdminStore();
 
-const formStatusCfg: Record<FormStatus, { label: string; className: string }> = {
-  PENDING:   { label: 'Pending',   className: 'bg-amber-50 text-amber-700 border-amber-100'       },
-  SUBMITTED: { label: 'Submitted', className: 'bg-blue-50 text-blue-700 border-blue-100'          },
-  VERIFIED:  { label: 'Verified',  className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  const studentUsers = useMemo(
+    () => users.filter((u) => u.role === 'student'),
+    [users],
+  );
+
+  const [userId,       setUserId]       = useState('');
+  const [instId,       setInstId]       = useState('');
+  const [department,   setDepartment]   = useState('');
+  const [academicYear, setAcademicYear] = useState('');
+  const [localError,   setLocalError]   = useState('');
+  const [saving,       setSaving]       = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId)  { setLocalError('Please select a student user.'); return; }
+    if (!instId)  { setLocalError('Please select an institution.');  return; }
+    setLocalError('');
+    setSaving(true);
+    try {
+      await createStudentProfile(
+        Number(userId),
+        Number(instId),
+        department || undefined,
+        academicYear ? Number(academicYear) : undefined,
+      );
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to create student profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayError = localError || error;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-blue-600 rounded-t-2xl" />
+
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+          <h2 className="text-base font-extrabold text-[#001D6E]">Add Student Profile</h2>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {displayError && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{displayError}</p>
+            </div>
+          )}
+
+          {/* Student user */}
+          <div>
+            <label className={labelCls}>Student User *</label>
+            <select value={userId} onChange={(e) => setUserId(e.target.value)} className={inputCls()}>
+              <option value="">Select student user...</option>
+              {studentUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.fullName} — {u.email}
+                </option>
+              ))}
+            </select>
+            {studentUsers.length === 0 && (
+              <p className="text-[10px] text-amber-500 font-semibold mt-1">No student-role users found. Create a user with the Student role first.</p>
+            )}
+          </div>
+
+          {/* Institution */}
+          <div>
+            <label className={labelCls}>Institution *</label>
+            <select value={instId} onChange={(e) => setInstId(e.target.value)} className={inputCls()}>
+              <option value="">Select institution...</option>
+              {institutions.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}{i.city ? ` — ${i.city}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Department */}
+          <div>
+            <label className={labelCls}>Department</label>
+            <input
+              type="text" value={department} placeholder="e.g. Computer Science"
+              onChange={(e) => setDepartment(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          {/* Academic Year */}
+          <div>
+            <label className={labelCls}>Academic Year</label>
+            <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
+              <option value="">Select year...</option>
+              {[1, 2, 3, 4, 5].map((y) => <option key={y} value={y}>Year {y}</option>)}
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-2 pb-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit" disabled={saving || isLoading}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {saving ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Saving...</> : 'Create Profile'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-const enrollmentCfg: Record<EnrollmentStatus, { label: string; className: string }> = {
-  ASSIGNED:    { label: 'Assigned',    className: 'bg-slate-100 text-slate-600 border-slate-200'        },
-  IN_PROGRESS: { label: 'In Progress', className: 'bg-blue-50 text-blue-700 border-blue-100'           },
-  COMPLETED:   { label: 'Completed',   className: 'bg-emerald-50 text-emerald-700 border-emerald-100'  },
-  CANCELLED:   { label: 'Cancelled',   className: 'bg-red-50 text-red-600 border-red-100'              },
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+
+interface EditModalProps {
+  profile: AdminStudentProfile;
+  onClose: () => void;
+}
+
+const EditModal: React.FC<EditModalProps> = ({ profile, onClose }) => {
+  const { institutions, updateStudentProfile, error } = useAdminStore();
+
+  const [instId,       setInstId]       = useState(String(profile.institutionId));
+  const [department,   setDepartment]   = useState(profile.department ?? '');
+  const [academicYear, setAcademicYear] = useState(profile.academicYear ? String(profile.academicYear) : '');
+  const [formStatus,   setFormStatus]   = useState<StudentFormStatus>(profile.formStatus);
+  const [saving,       setSaving]       = useState(false);
+  const [localError,   setLocalError]   = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+    setSaving(true);
+    try {
+      await updateStudentProfile(profile.id, {
+        institutionId: Number(instId),
+        department:    department || undefined,
+        academicYear:  academicYear ? Number(academicYear) : undefined,
+        formStatus,
+      });
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to update student profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayError = localError || error;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-blue-600 rounded-t-2xl" />
+
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-extrabold text-[#001D6E]">Edit Student Profile</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-0.5">{profile.fullName} · {profile.email}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {displayError && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{displayError}</p>
+            </div>
+          )}
+
+          <div>
+            <label className={labelCls}>Institution</label>
+            <select value={instId} onChange={(e) => setInstId(e.target.value)} className={inputCls()}>
+              {institutions.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}{i.city ? ` — ${i.city}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelCls}>Department</label>
+            <input
+              type="text" value={department} placeholder="e.g. Computer Science"
+              onChange={(e) => setDepartment(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Academic Year</label>
+              <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
+                <option value="">Not set</option>
+                {[1, 2, 3, 4, 5].map((y) => <option key={y} value={y}>Year {y}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Form Status</label>
+              <select
+                value={formStatus}
+                onChange={(e) => setFormStatus(e.target.value as StudentFormStatus)}
+                className={inputCls()}
+              >
+                {FORM_STATUSES.map((s) => (
+                  <option key={s} value={s}>{formStatusCfg[s].label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2 pb-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit" disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {saving ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Saving...</> : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-const institutions = ['All Institutions', ...Array.from(new Set(mockStudents.map(s => s.institution)))];
+// ── Delete Modal ──────────────────────────────────────────────────────────────
+
+interface DeleteModalProps {
+  profile: AdminStudentProfile;
+  onClose: () => void;
+}
+
+const DeleteModal: React.FC<DeleteModalProps> = ({ profile, onClose }) => {
+  const { deleteStudentProfile } = useAdminStore();
+  const [deleting,   setDeleting]   = useState(false);
+  const [localError, setLocalError] = useState('');
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteStudentProfile(profile.id);
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to delete student profile.');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-red-500 rounded-t-2xl" />
+        <div className="p-6">
+          <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center mb-4">
+            <Trash2 className="h-5 w-5" />
+          </div>
+          <h2 className="text-base font-extrabold text-slate-900">Delete Student Profile</h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1.5">
+            This will permanently delete <span className="text-slate-800">{profile.fullName}</span>'s profile. Students with existing course enrollments cannot be deleted.
+          </p>
+          {localError && (
+            <div className="flex items-start gap-2 p-3 mt-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{localError}</p>
+            </div>
+          )}
+          <div className="flex gap-3 mt-5">
+            <button onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete} disabled={deleting}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {deleting ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Deleting...</> : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Students');
+
   const {
-    studentSearchQuery, studentFormStatusFilter, studentEnrollmentFilter,
-    setStudentSearchQuery, setStudentFormStatusFilter, setStudentEnrollmentFilter,
+    studentProfiles, institutions, users, isLoading, error,
+    studentSearchQuery, studentFormStatusFilter,
+    setStudentSearchQuery, setStudentFormStatusFilter,
+    fetchStudentProfiles, fetchInstitutions, fetchUsers,
   } = useAdminStore();
 
-  const [institutionFilter, setInstitutionFilter] = React.useState('All Institutions');
+  const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminStudentProfile | null>(null);
+  const [delTarget,  setDelTarget]  = useState<AdminStudentProfile | null>(null);
+
+  useEffect(() => {
+    fetchStudentProfiles();
+    if (institutions.length === 0) fetchInstitutions();
+    if (users.length === 0)        fetchUsers();
+  }, []);
 
   const filtered = useMemo(() => {
-    return mockStudents.filter((s) => {
-      const q = studentSearchQuery.toLowerCase();
-      const matchesSearch  = !q || s.fullName.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
-      const matchesForm    = studentFormStatusFilter === 'all' || s.formStatus === studentFormStatusFilter;
-      const matchesEnroll  = studentEnrollmentFilter === 'all' || s.enrollmentStatus === studentEnrollmentFilter;
-      const matchesInst    = institutionFilter === 'All Institutions' || s.institution === institutionFilter;
-      return matchesSearch && matchesForm && matchesEnroll && matchesInst;
+    const q = studentSearchQuery.toLowerCase();
+    return studentProfiles.filter((p) => {
+      const name = [p.fullName, p.lastName].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch = !q
+        || name.includes(q)
+        || p.email.toLowerCase().includes(q)
+        || (p.department ?? '').toLowerCase().includes(q)
+        || p.institutionName.toLowerCase().includes(q);
+      const matchForm = studentFormStatusFilter === 'all' || p.formStatus === studentFormStatusFilter;
+      return matchSearch && matchForm;
     });
-  }, [studentSearchQuery, studentFormStatusFilter, studentEnrollmentFilter, institutionFilter]);
+  }, [studentProfiles, studentSearchQuery, studentFormStatusFilter]);
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
@@ -77,71 +381,56 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
           <main className="flex-1 p-8 overflow-y-auto space-y-6">
 
             {/* Page Header */}
-            <div>
-              <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                <span>Admin</span>
-                <span className="text-slate-300">/</span>
-                <span className="text-blue-600">Students</span>
-              </nav>
-              <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Students</h1>
-              <p className="text-sm text-slate-500 mt-1">{mockStudents.length} student profiles across all institutions.</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  <span>Admin</span><span className="text-slate-300">/</span>
+                  <span className="text-blue-600">Students</span>
+                </nav>
+                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Students</h1>
+                <p className="text-sm text-slate-500 mt-1">{studentProfiles.length} student profile{studentProfiles.length !== 1 ? 's' : ''} in the system.</p>
+              </div>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Add Student Profile
+              </button>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-900/5 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center gap-3">
+            {/* Error banner */}
+            {error && (
+              <div className="flex items-start gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <p className="font-semibold">{error}</p>
+              </div>
+            )}
 
-                {/* Search */}
+            {/* Table card */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-900/5 overflow-hidden">
+
+              {/* Filters */}
+              <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center gap-3">
                 <div className="relative flex-1 max-w-xs">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                    </svg>
-                  </div>
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                  </svg>
                   <input
-                    type="text"
-                    value={studentSearchQuery}
-                    onChange={(e) => setStudentSearchQuery(e.target.value)}
-                    placeholder="Search by name or email..."
+                    type="text" value={studentSearchQuery} onChange={(e) => setStudentSearchQuery(e.target.value)}
+                    placeholder="Search by name, email, department..."
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all"
                   />
                 </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Institution filter */}
-                  <select
-                    value={institutionFilter}
-                    onChange={(e) => setInstitutionFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all"
-                  >
-                    {institutions.map((i) => <option key={i} value={i}>{i}</option>)}
-                  </select>
-
-                  {/* Form Status filter */}
-                  <select
-                    value={studentFormStatusFilter}
-                    onChange={(e) => setStudentFormStatusFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all"
-                  >
-                    <option value="all">All Form Status</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="SUBMITTED">Submitted</option>
-                    <option value="VERIFIED">Verified</option>
-                  </select>
-
-                  {/* Enrollment Status filter */}
-                  <select
-                    value={studentEnrollmentFilter}
-                    onChange={(e) => setStudentEnrollmentFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all"
-                  >
-                    <option value="all">All Enrollment</option>
-                    <option value="ASSIGNED">Assigned</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
-                </div>
+                <select
+                  value={studentFormStatusFilter}
+                  onChange={(e) => setStudentFormStatusFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-400 transition-all"
+                >
+                  <option value="all">All Form Status</option>
+                  {FORM_STATUSES.map((s) => (
+                    <option key={s} value={s}>{formStatusCfg[s].label}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Table */}
@@ -153,54 +442,85 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell">Institution</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Department</th>
                       <th className="text-center py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Year</th>
-                      <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Form</th>
-                      <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Enrollment</th>
+                      <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Form Status</th>
+                      <th className="py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
-                          No students match your filters.
+                        <td colSpan={6} className="py-12 text-center">
+                          <RefreshCw className="h-5 w-5 animate-spin text-slate-300 mx-auto" />
                         </td>
                       </tr>
-                    ) : filtered.map((student) => {
-                      const fCfg = formStatusCfg[student.formStatus];
-                      const eCfg = enrollmentCfg[student.enrollmentStatus];
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-16 text-center">
+                          <GraduationCap className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                          <p className="text-sm text-slate-400 font-semibold">
+                            {studentSearchQuery || studentFormStatusFilter !== 'all'
+                              ? 'No students match your filters.'
+                              : 'No student profiles yet. Click "Add Student Profile" to create one.'}
+                          </p>
+                        </td>
+                      </tr>
+                    ) : filtered.map((p) => {
+                      const fCfg = formStatusCfg[p.formStatus];
+                      const name = [p.fullName, p.lastName].filter(Boolean).join(' ');
                       return (
-                        <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center shrink-0">
-                                {student.fullName.slice(0, 2).toUpperCase()}
+                                {name.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-slate-900">{student.fullName}</p>
-                                <p className="text-[10px] text-slate-400 font-semibold">{student.email}</p>
+                                <p className="text-xs font-bold text-slate-900">{name}</p>
+                                <p className="text-[10px] text-slate-400 font-semibold">{p.email}</p>
                               </div>
                             </div>
                           </td>
                           <td className="py-3.5 px-4 hidden md:table-cell">
-                            <p className="text-xs font-semibold text-slate-700">{student.institution}</p>
-                          </td>
-                          <td className="py-3.5 px-4 hidden lg:table-cell">
-                            <p className="text-xs font-semibold text-slate-600">{student.department}</p>
-                          </td>
-                          <td className="py-3.5 px-4 text-center hidden lg:table-cell">
-                            <div className="flex items-center justify-center gap-1">
-                              <GraduationCap className="h-3 w-3 text-slate-400" />
-                              <span className="text-xs font-bold text-slate-700">Year {student.academicYear}</span>
+                            <div className="flex items-center gap-1.5">
+                              <Building2 className="h-3 w-3 text-slate-300 shrink-0" />
+                              <p className="text-xs font-semibold text-slate-700">{p.institutionName}</p>
                             </div>
                           </td>
+                          <td className="py-3.5 px-4 hidden lg:table-cell">
+                            <p className="text-xs font-semibold text-slate-600">{p.department ?? <span className="text-slate-300 italic">—</span>}</p>
+                          </td>
+                          <td className="py-3.5 px-4 text-center hidden lg:table-cell">
+                            {p.academicYear ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <GraduationCap className="h-3 w-3 text-slate-400" />
+                                <span className="text-xs font-bold text-slate-700">Year {p.academicYear}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-300 text-xs">—</span>
+                            )}
+                          </td>
                           <td className="py-3.5 px-4">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${fCfg.className}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${fCfg.cls}`}>
                               {fCfg.label}
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${eCfg.className}`}>
-                              {eCfg.label}
-                            </span>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => setEditTarget(p)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setDelTarget(p)}
+                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -210,13 +530,19 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
               </div>
 
               <div className="px-5 py-3 border-t border-slate-100">
-                <p className="text-[11px] text-slate-400 font-semibold">Showing {filtered.length} of {mockStudents.length} students</p>
+                <p className="text-[11px] text-slate-400 font-semibold">
+                  Showing {filtered.length} of {studentProfiles.length} student{studentProfiles.length !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
 
           </main>
         </div>
       </div>
+
+      {showCreate && <CreateModal onClose={() => setShowCreate(false)} />}
+      {editTarget && <EditModal  profile={editTarget} onClose={() => setEditTarget(null)} />}
+      {delTarget  && <DeleteModal profile={delTarget} onClose={() => setDelTarget(null)} />}
     </div>
   );
 };

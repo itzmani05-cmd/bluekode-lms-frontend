@@ -12,8 +12,8 @@ import { useAppStore } from '../../store/login';
 import logo from '../../assests/logo.jpeg';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'courses' | 'assignments' | 'learning';
-  onViewChange?: (view: 'dashboard' | 'courses' | 'assignments' | 'learning') => void;
+  activeTab: 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
+  onViewChange?: (view: 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings') => void;
 }
 
 const navItems = [
@@ -100,10 +100,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
       {/* ── Bottom Items ── */}
       <div className={`p-3 border-t border-white/10 space-y-1.5`}>
         <button
+          onClick={() => onViewChange?.('settings')}
           title={collapsed ? 'Settings' : undefined}
           className={`
             w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
-            text-white/70 hover:bg-white/5 hover:text-white transition-all duration-200
+            transition-all duration-200
+            ${activeTab === 'settings'
+              ? 'bg-white/10 text-white shadow-sm border border-white/5'
+              : 'text-white/70 hover:bg-white/5 hover:text-white'
+            }
             ${collapsed ? 'justify-center' : ''}
           `}
         >

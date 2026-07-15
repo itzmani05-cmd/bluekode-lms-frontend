@@ -18,6 +18,13 @@ import {
 } from '../lib/api/institutions';
 import { fetchEmployees as apiFetchEmployees } from '../lib/api/employees';
 import {
+  fetchAllStudentProfilesApi,
+  createStudentProfileApi,
+  updateStudentProfileApi,
+  deleteStudentProfileApi,
+} from '../lib/api/adminStudentProfiles';
+import type { AdminStudentProfile, FormStatus as StudentFormStatus } from '../lib/api/adminStudentProfiles';
+import {
   fetchModulesApi, createModuleApi, updateModuleApi, deleteModuleApi,
 } from '../lib/api/modules';
 import type { CourseModule } from '../lib/api/modules';
@@ -25,6 +32,8 @@ import {
   fetchLecturesApi, createLectureApi, updateLectureApi, deleteLectureApi,
 } from '../lib/api/lectures';
 import type { Lesson, CreateLessonPayload, UpdateLessonPayload } from '../lib/api/lectures';
+
+export type { AdminStudentProfile, StudentFormStatus };
 
 //Shared types
 
@@ -108,6 +117,7 @@ type AdminState = {
   courses:         Course[];
   users:           AdminUser[];
   employees:       Employee[];
+  studentProfiles: AdminStudentProfile[];
   selectedCourseId: number | null;
   modules:         CourseModule[];
   lessons:         Record<number, Lesson[]>;
@@ -128,12 +138,13 @@ type AdminState = {
   setSelectedCourseId: (id: number | null) => void;
 
   // Fetch actions
-  fetchInstitutions: () => Promise<void>;
-  fetchCourses:      () => Promise<void>;
-  fetchUsers:        () => Promise<void>;
-  fetchEmployees:    () => Promise<void>;
-  fetchModules:      (courseId: number) => Promise<void>;
-  fetchLessons:      (moduleId: number) => Promise<void>;
+  fetchInstitutions:    () => Promise<void>;
+  fetchCourses:         () => Promise<void>;
+  fetchUsers:           () => Promise<void>;
+  fetchEmployees:       () => Promise<void>;
+  fetchStudentProfiles: () => Promise<void>;
+  fetchModules:         (courseId: number) => Promise<void>;
+  fetchLessons:         (moduleId: number) => Promise<void>;
 
   // Module actions
   addModule:    (courseId: number, name: string, description?: string) => Promise<void>;
@@ -158,6 +169,11 @@ type AdminState = {
   // User actions
   addUser:          (email: string, role: UserRole, fullName: string, password: string) => Promise<void>;
   updateUserStatus: (id: number, status: AccountStatus) => Promise<void>;
+
+  // Student profile actions
+  createStudentProfile: (userId: number, institutionId: number, department?: string, academicYear?: number) => Promise<void>;
+  updateStudentProfile: (id: number, fields: { institutionId?: number; department?: string; academicYear?: number; formStatus?: StudentFormStatus }) => Promise<void>;
+  deleteStudentProfile: (id: number) => Promise<void>;
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -183,6 +199,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   courses:          [],
   users:            [],
   employees:        [],
+  studentProfiles:  [],
   selectedCourseId: null,
   modules:          [],
   lessons:          {},
@@ -241,6 +258,34 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       console.error('[fetchEmployees]', err);
       set({ error: 'Failed to load employees.', isLoading: false });
     }
+  },
+
+  fetchStudentProfiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await fetchAllStudentProfilesApi();
+      set({ studentProfiles: data, isLoading: false });
+    } catch {
+      set({ error: 'Failed to load student profiles.', isLoading: false });
+    }
+  },
+
+  createStudentProfile: async (userId, institutionId, department, academicYear) => {
+    const profile = await createStudentProfileApi(userId, institutionId, department, academicYear);
+    set((s) => ({ studentProfiles: [profile, ...s.studentProfiles], error: null }));
+  },
+
+  updateStudentProfile: async (id, fields) => {
+    const profile = await updateStudentProfileApi(id, fields);
+    set((s) => ({
+      studentProfiles: s.studentProfiles.map((p) => (p.id === id ? profile : p)),
+      error: null,
+    }));
+  },
+
+  deleteStudentProfile: async (id) => {
+    await deleteStudentProfileApi(id);
+    set((s) => ({ studentProfiles: s.studentProfiles.filter((p) => p.id !== id), error: null }));
   },
 
   setSelectedCourseId: (selectedCourseId) => set({ selectedCourseId, modules: [], lessons: {} }),

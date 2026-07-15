@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../store/login';
 import logo from '../../assests/logo.jpeg';
 
-type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
+type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
 
 interface HeaderProps {
     activeTab?: ViewType;

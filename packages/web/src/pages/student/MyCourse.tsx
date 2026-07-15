@@ -1,92 +1,117 @@
-import React from 'react';
-import { ChevronRight, RotateCcw, FileCheck } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronRight, BookOpen, Layers, RefreshCw, AlertTriangle, Search,
+} from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Sidebar from '../../components/layout/Sidebar';
 import { useStudentStore } from '../../store/Student';
-import CourseCard from '../../components/student/CourseCard';
-import type { Course } from '../../components/student/CourseCard';
+import { fetchCourses } from '../../lib/api/courses';
+import type { Course } from '../../store/Admin';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
+// ── Colour palette cycles for cards with no image ──────────────────────────────
 
+const CARD_GRADIENTS = [
+  'from-blue-600 to-sky-500',
+  'from-indigo-600 to-violet-500',
+  'from-teal-500 to-emerald-400',
+  'from-slate-700 to-slate-900',
+  'from-rose-500 to-pink-400',
+  'from-amber-500 to-orange-400',
+];
 
-export const MyCourse: React.FC<{ onViewChange?: (view: 'dashboard' | 'courses' | 'assignments' | 'learning') => void }> = ({ onViewChange }) => {
+const gradientFor = (id: number) => CARD_GRADIENTS[id % CARD_GRADIENTS.length];
+
+// ── Card ─────────────────────────────────────────────────────────────────────
+
+interface CourseDbCardProps {
+  course:    Course;
+  onLearn?:  () => void;
+}
+
+const CourseDbCard: React.FC<CourseDbCardProps> = ({ course, onLearn }) => {
+  const initials = course.name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm shadow-slate-900/5 hover:shadow-md hover:border-blue-500/20 transition-all duration-300 flex flex-col">
+      {/* Thumbnail */}
+      <div className={`h-36 bg-gradient-to-br ${gradientFor(course.id)} relative flex items-center justify-center overflow-hidden shrink-0`}>
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
+        <span className="relative text-4xl font-extrabold text-white/80 select-none tracking-tight">
+          {initials}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">
+            {course.moduleCount} {course.moduleCount === 1 ? 'Module' : 'Modules'}
+          </span>
+          <h3 className="font-extrabold text-sm text-slate-900 leading-snug line-clamp-2">
+            {course.name}
+          </h3>
+          {course.description && (
+            <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-medium leading-relaxed">
+              {course.description}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
+            <Layers className="h-3 w-3" />
+            <span>{course.moduleCount} modules</span>
+          </div>
+          <button
+            onClick={onLearn}
+            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+          >
+            View Course
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+type StudentView = 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
+
+const MyCourse: React.FC<{ onViewChange?: (view: StudentView) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Course Library');
-  const { courseSearchQuery: searchQuery, courseActiveTab: activeTab, setCourseSearchQuery: setSearchQuery, setCourseActiveTab: setActiveTab } = useStudentStore();
+  const { courseSearchQuery: searchQuery, setCourseSearchQuery: setSearchQuery } = useStudentStore();
 
-  const courses: Course[] = [
-    {
-      id: '1',
-      title: 'Advanced Cloud Infrastructure & Security',
-      track: 'ARCHITECTURE TRACK',
-      imageBg: 'from-blue-600 to-sky-500',
-      isRequired: true,
-      status: 'in-progress',
-      progressLabel: 'Module 4 of 8',
-      progressPercent: 65,
-      actionLabel: 'Continue Learning',
-      imageSvg: (
-        <svg className="w-16 h-16 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-        </svg>
-      )
-    },
-    {
-      id: '2',
-      title: 'Data Privacy & GDPR Essentials',
-      track: 'COMPLIANCE TRACK',
-      imageBg: 'from-slate-800 to-slate-900',
-      status: 'in-progress',
-      progressLabel: 'In Progress',
-      progressPercent: 30,
-      actionLabel: 'Resume',
-      imageSvg: (
-        <svg className="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      id: '3',
-      title: 'Agile Leadership Fundamentals',
-      track: 'MANAGEMENT TRACK',
-      imageBg: 'from-teal-500 to-emerald-400',
-      status: 'completed',
-      progressLabel: 'Completed',
-      progressPercent: 100,
-      completedDate: 'Oct 12, 2023',
-      actionLabel: 'Review Material',
-      actionIcon: <RotateCcw className="h-3.5 w-3.5" />,
-      imageSvg: (
-        <svg className="w-16 h-16 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      id: '4',
-      title: 'Enterprise Network Topology',
-      track: 'IT INFRASTRUCTURE',
-      imageBg: 'from-blue-500 via-indigo-500 to-sky-400',
-      status: 'completed',
-      progressLabel: 'Completed',
-      progressPercent: 100,
-      completedDate: 'Sep 05, 2023',
-      actionLabel: 'View Certificate',
-      actionIcon: <FileCheck className="h-3.5 w-3.5" />,
-      imageSvg: (
-        <svg className="w-16 h-16 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-        </svg>
-      )
-    }
-  ];
+  const [courses,  setCourses]  = useState<Course[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.track.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'all' || course.status === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  useEffect(() => {
+    setLoading(true);
+    fetchCourses()
+      .then((all) => {
+        setCourses(all.filter((c) => c.status === 'ACTIVE'));
+        setApiError(null);
+      })
+      .catch(() => setApiError('Could not load courses. Please try again.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return courses;
+    return courses.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description ?? '').toLowerCase().includes(q),
+    );
+  }, [courses, searchQuery]);
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
@@ -94,83 +119,89 @@ export const MyCourse: React.FC<{ onViewChange?: (view: 'dashboard' | 'courses' 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeTab="courses" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 p-8 overflow-y-auto space-y-6">
-          <div className="relative max-w-xl">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search courses by name or track..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 shadow-sm transition-all"
-            />
-          </div>
+          <main className="flex-1 p-8 overflow-y-auto space-y-6">
 
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                <span 
-                  onClick={() => onViewChange?.('dashboard')}
-                  className="hover:text-slate-600 cursor-pointer"
-                >
-                  Home
-                </span>
-                <ChevronRight className="h-3 w-3" />
-                <span className="text-blue-600">My Courses</span>
-              </nav>
-              <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Course Library</h1>
-            </div>
-            <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200/40">
-              <button 
-                onClick={() => setActiveTab('all')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === 'all' 
-                    ? 'bg-white text-blue-700 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                All Courses
-              </button>
-              <button 
-                onClick={() => setActiveTab('in-progress')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === 'in-progress' 
-                    ? 'bg-white text-blue-700 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                In Progress (3)
-              </button>
-              <button 
-                onClick={() => setActiveTab('completed')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === 'completed' 
-                    ? 'bg-white text-blue-700 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Completed (12)
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                onAction={() => {
-                  if (course.status === 'in-progress') onViewChange?.('learning');
-                }}
+            {/* Search */}
+            <div className="relative max-w-xl">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search courses by name or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 shadow-sm transition-all"
               />
-            ))}
-          </div>
-        </main>
-      </div>
+            </div>
+
+            {/* Header row */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <span onClick={() => onViewChange?.('dashboard')} className="hover:text-slate-600 cursor-pointer">
+                    Home
+                  </span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="text-blue-600">My Courses</span>
+                </nav>
+                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Course Library</h1>
+                {!loading && !apiError && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    {courses.length} course{courses.length !== 1 ? 's' : ''} available
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Error */}
+            {apiError && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <p className="font-semibold">{apiError}</p>
+              </div>
+            )}
+
+            {/* Loading */}
+            {loading && (
+              <div className="flex items-center justify-center py-24 text-slate-400">
+                <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                <span className="text-sm font-semibold">Loading courses...</span>
+              </div>
+            )}
+
+            {/* Grid */}
+            {!loading && !apiError && (
+              <>
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <BookOpen className="h-10 w-10 text-slate-200 mb-3" />
+                    <p className="text-sm font-bold text-slate-400">
+                      {searchQuery ? 'No courses match your search.' : 'No active courses available yet.'}
+                    </p>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="mt-3 text-xs font-bold text-blue-600 hover:underline"
+                      >
+                        Clear search
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                    {filtered.map((course) => (
+                      <CourseDbCard
+                        key={course.id}
+                        course={course}
+                        onLearn={() => onViewChange?.('learning')}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+          </main>
+        </div>
       </div>
     </div>
   );

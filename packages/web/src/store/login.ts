@@ -1,17 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { loginApi } from '../lib/api/auth';
+import { loginApi, changePasswordApi, completeProfileApi } from '../lib/api/auth';
+import type { CompleteProfilePayload } from '../lib/api/auth';
 import { setAuthToken, clearAuthToken } from '../lib/axios';
 
-export type UserRole = 'student' | 'trainer' | 'technical head' | 'project head' | 'admin';
+export type UserRole        = 'student' | 'trainer' | 'technical head' | 'project head' | 'admin';
+export type AccountStatus   = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'INACTIVE' | 'REJECTED';
+
+export interface CurrentUser {
+  user_id:       number;
+  email:         string;
+  role:          UserRole;
+  accountStatus: AccountStatus;
+}
 
 interface AuthState {
-  currentUser:     { user_id: number; email: string; role: UserRole } | null;
+  currentUser:     CurrentUser | null;
   isAuthenticated: boolean;
   isLoading:       boolean;
   error:           string | null;
   successMsg:      string | null;
   login:           (email: string, password: string) => Promise<boolean>;
+  changePassword:  (newPassword: string) => Promise<boolean>;
+  completeProfile: (data: CompleteProfilePayload) => Promise<boolean>;
   logout:          () => void;
   clearStatus:     () => void;
 }
@@ -41,7 +52,12 @@ export const useAppStore = create<AuthState>()(
           setAuthToken(access_token);
           const role = normaliseRole(user.roles[0] ?? 'student');
           set({
-            currentUser:     { user_id: user.user_id, email: user.email, role },
+            currentUser:     {
+              user_id:       user.user_id,
+              email:         user.email,
+              role,
+              accountStatus: user.account_status as AccountStatus,
+            },
             isAuthenticated: true,
             successMsg:      'Access Authorized! Redirecting...',
             isLoading:       false,
@@ -49,6 +65,40 @@ export const useAppStore = create<AuthState>()(
           return true;
         } catch {
           set({ error: 'Invalid email or password.', isLoading: false });
+          return false;
+        }
+      },
+
+      changePassword: async (newPassword) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { account_status } = await changePasswordApi(newPassword);
+          set((s) => ({
+            currentUser: s.currentUser
+              ? { ...s.currentUser, accountStatus: account_status as AccountStatus }
+              : null,
+            isLoading: false,
+          }));
+          return true;
+        } catch {
+          set({ error: 'Failed to change password. Please try again.', isLoading: false });
+          return false;
+        }
+      },
+
+      completeProfile: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { account_status } = await completeProfileApi(data);
+          set((s) => ({
+            currentUser: s.currentUser
+              ? { ...s.currentUser, accountStatus: account_status as AccountStatus }
+              : null,
+            isLoading: false,
+          }));
+          return true;
+        } catch {
+          set({ error: 'Failed to save profile. Please try again.', isLoading: false });
           return false;
         }
       },
@@ -66,6 +116,15 @@ export const useAppStore = create<AuthState>()(
         currentUser:     state.currentUser,
         isAuthenticated: state.isAuthenticated,
       }),
+      // migrate persisted state: add accountStatus if missing
+      migrate: (persisted: unknown) => {
+        const s = persisted as { currentUser?: Partial<CurrentUser>; isAuthenticated?: boolean };
+        if (s.currentUser && !s.currentUser.accountStatus) {
+          s.currentUser.accountStatus = 'ACTIVE';
+        }
+        return s;
+      },
+      version: 1,
     }
   )
 );
