@@ -16,7 +16,14 @@ import {
   updateInstitutionApi,
   deleteInstitutionApi,
 } from '../lib/api/institutions';
-import { fetchEmployees as apiFetchEmployees } from '../lib/api/employees';
+import {
+  fetchEmployees as apiFetchEmployees,
+  createEmployeeProfileApi,
+  updateEmployeeProfileApi,
+  deleteEmployeeProfileApi,
+} from '../lib/api/employees';
+import type { EmployeeProfileFields } from '../lib/api/employees';
+import { createEnrollmentApi } from '../lib/api/enrollments';
 import {
   fetchAllStudentProfilesApi,
   createStudentProfileApi,
@@ -91,6 +98,10 @@ export interface Employee {
   institution: string;
   status: EmployeeStatus;
   joiningDate: string;
+  joiningDateRaw: string | null;
+  designationRaw: string | null;
+  specializationRaw: string | null;
+  isActive: boolean;
 }
 
 // ── Store type ────────────────────────────────────────────────────────────────
@@ -174,6 +185,14 @@ type AdminState = {
   createStudentProfile: (userId: number, institutionId: number, department?: string, academicYear?: number) => Promise<void>;
   updateStudentProfile: (id: number, fields: { institutionId?: number; department?: string; academicYear?: number; formStatus?: StudentFormStatus }) => Promise<void>;
   deleteStudentProfile: (id: number) => Promise<void>;
+
+  // Employee profile actions
+  createEmployeeProfile: (userId: number, fields: EmployeeProfileFields) => Promise<void>;
+  updateEmployeeProfile: (id: number, fields: EmployeeProfileFields) => Promise<void>;
+  deleteEmployeeProfile: (id: number) => Promise<void>;
+
+  // Enrollment actions
+  assignCourseToStudent: (studentProfileId: number, courseId: number) => Promise<void>;
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -286,6 +305,24 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   deleteStudentProfile: async (id) => {
     await deleteStudentProfileApi(id);
     set((s) => ({ studentProfiles: s.studentProfiles.filter((p) => p.id !== id), error: null }));
+  },
+
+  createEmployeeProfile: async (userId, fields) => {
+    const profile = await createEmployeeProfileApi(userId, fields);
+    set((s) => ({ employees: [profile, ...s.employees], error: null }));
+  },
+
+  updateEmployeeProfile: async (id, fields) => {
+    const profile = await updateEmployeeProfileApi(id, fields);
+    set((s) => ({
+      employees: s.employees.map((e) => (e.id === id ? profile : e)),
+      error: null,
+    }));
+  },
+
+  deleteEmployeeProfile: async (id) => {
+    await deleteEmployeeProfileApi(id);
+    set((s) => ({ employees: s.employees.filter((e) => e.id !== id), error: null }));
   },
 
   setSelectedCourseId: (selectedCourseId) => set({ selectedCourseId, modules: [], lessons: {} }),
@@ -435,6 +472,18 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         ?? 'Failed to create user.';
       set({ error: message });
       throw new Error(message);
+    }
+  },
+
+  assignCourseToStudent: async (studentProfileId, courseId) => {
+    try {
+      await createEnrollmentApi(studentProfileId, courseId);
+    } catch (e) {
+      const msg =
+        (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to assign course.';
+      set({ error: msg });
+      throw new Error(msg);
     }
   },
 

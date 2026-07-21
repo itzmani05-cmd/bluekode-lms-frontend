@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, HelpCircle, Menu, X, LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Briefcase } from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Briefcase, Settings, Info } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { AdminViewType } from './AdminSidebar';
 import logo from '../../assests/logo.jpeg';
+import LearnMoreModal from './LearnMoreModal';
 
 interface AdminHeaderProps {
   activeTab?: AdminViewType;
@@ -16,10 +17,12 @@ const navItems: { key: AdminViewType; label: string; Icon: React.ElementType }[]
   { key: 'admin-courses',      label: 'Courses',      Icon: BookOpen        },
   { key: 'admin-students',     label: 'Students',     Icon: GraduationCap   },
   { key: 'admin-employees',    label: 'Employees',    Icon: Briefcase       },
+  { key: 'admin-settings',     label: 'Settings',     Icon: Settings        },
 ];
 
 const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [learnMoreOpen, setLearnMoreOpen] = useState(false);
   const { currentUser } = useAppStore();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +60,13 @@ const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
         </button>
         <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
           <HelpCircle className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => setLearnMoreOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        >
+          <Info className="h-4 w-4" />
+          Learn More
         </button>
         <div className="h-8 w-px bg-slate-200" />
         <div className="flex items-center gap-2">
@@ -122,9 +132,18 @@ const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
               <HelpCircle className="h-4 w-4 text-slate-400" />
               <span>Support</span>
             </button>
+            <button
+              onClick={() => { setLearnMoreOpen(true); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+            >
+              <Info className="h-4 w-4 text-slate-400" />
+              <span>Learn More</span>
+            </button>
           </div>
         )}
       </div>
+
+      {learnMoreOpen && <LearnMoreModal onClose={() => setLearnMoreOpen(false)} />}
     </header>
   );
 };

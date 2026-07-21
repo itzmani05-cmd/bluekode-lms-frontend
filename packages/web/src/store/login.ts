@@ -63,8 +63,14 @@ export const useAppStore = create<AuthState>()(
             isLoading:       false,
           });
           return true;
-        } catch {
-          set({ error: 'Invalid email or password.', isLoading: false });
+        } catch (err: unknown) {
+          const status = (err as { response?: { status?: number } })?.response?.status;
+          const msg =
+            status === 401 ? 'Invalid email or password.' :
+            status === 400 ? 'Please check your email and password format.' :
+            status ? `Login failed (server error ${status}). Please try again.` :
+            'Cannot reach the server. Please check your connection.';
+          set({ error: msg, isLoading: false });
           return false;
         }
       },

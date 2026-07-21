@@ -15,7 +15,7 @@ const mapUser = (u: ApiUser): AdminUser => ({
   id:            u.user_id,
   fullName:      `${u.full_name} ${u.last_name}`.trim(),
   email:         u.email,
-  role:          ((u.userRoles[0]?.role.role_name ?? 'student').toLowerCase()) as UserRole,
+  role:          ((u.userRoles[0]?.role.role_name ?? 'admin').toLowerCase()) as UserRole,
   accountStatus: u.account_status,
   createdAt:     new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
 });

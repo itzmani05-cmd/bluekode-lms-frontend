@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  GraduationCap, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle, Building2,
+  GraduationCap, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle, Building2, BookOpen,
 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
@@ -136,7 +136,9 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
             <label className={labelCls}>Academic Year</label>
             <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
               <option value="">Select year...</option>
-              {[1, 2, 3, 4, 5].map((y) => <option key={y} value={y}>Year {y}</option>)}
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
             </select>
           </div>
 
@@ -243,7 +245,9 @@ const EditModal: React.FC<EditModalProps> = ({ profile, onClose }) => {
               <label className={labelCls}>Academic Year</label>
               <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
                 <option value="">Not set</option>
-                {[1, 2, 3, 4, 5].map((y) => <option key={y} value={y}>Year {y}</option>)}
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -336,6 +340,121 @@ const DeleteModal: React.FC<DeleteModalProps> = ({ profile, onClose }) => {
   );
 };
 
+// ── Assign Course Modal ───────────────────────────────────────────────────────
+
+interface AssignCourseModalProps {
+  profile: AdminStudentProfile;
+  onClose: () => void;
+}
+
+const AssignCourseModal: React.FC<AssignCourseModalProps> = ({ profile, onClose }) => {
+  const { courses, assignCourseToStudent, fetchCourses } = useAdminStore();
+
+  const [courseId,    setCourseId]    = useState('');
+  const [saving,      setSaving]      = useState(false);
+  const [localError,  setLocalError]  = useState('');
+  const [success,     setSuccess]     = useState(false);
+
+  useEffect(() => {
+    if (courses.length === 0) fetchCourses();
+  }, []);
+
+  const activeCourses = useMemo(
+    () => courses.filter((c) => c.status === 'ACTIVE'),
+    [courses],
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!courseId) { setLocalError('Please select a course.'); return; }
+    setLocalError('');
+    setSaving(true);
+    try {
+      await assignCourseToStudent(profile.id, Number(courseId));
+      setSuccess(true);
+      setCourseId('');
+    } catch (e) {
+      const msg = (e as Error).message;
+      setLocalError(
+        msg.toLowerCase().includes('already')
+          ? 'This student is already enrolled in that course.'
+          : msg,
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const name = [profile.fullName, profile.lastName].filter(Boolean).join(' ');
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500 rounded-t-2xl" />
+
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-extrabold text-[#001D6E]">Assign Course</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-0.5">{name} · {profile.email}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {localError && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{localError}</p>
+            </div>
+          )}
+          {success && (
+            <div className="flex items-start gap-2 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs">
+              <BookOpen className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">Course assigned successfully! You can assign another or close.</p>
+            </div>
+          )}
+
+          <div>
+            <label className={labelCls}>Course *</label>
+            <select
+              value={courseId}
+              onChange={(e) => { setCourseId(e.target.value); setSuccess(false); setLocalError(''); }}
+              className={inputCls()}
+            >
+              <option value="">Select a course...</option>
+              {activeCourses.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            {activeCourses.length === 0 && (
+              <p className="text-[10px] text-amber-500 font-semibold mt-1">
+                No active courses found. Create and activate a course first.
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2 pb-2">
+            <button
+              type="button" onClick={onClose}
+              className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              Close
+            </button>
+            <button
+              type="submit" disabled={saving || !courseId}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {saving ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Assigning...</> : 'Assign Course'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
@@ -348,9 +467,10 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
     fetchStudentProfiles, fetchInstitutions, fetchUsers,
   } = useAdminStore();
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [editTarget, setEditTarget] = useState<AdminStudentProfile | null>(null);
-  const [delTarget,  setDelTarget]  = useState<AdminStudentProfile | null>(null);
+  const [showCreate,    setShowCreate]    = useState(false);
+  const [editTarget,    setEditTarget]    = useState<AdminStudentProfile | null>(null);
+  const [delTarget,     setDelTarget]     = useState<AdminStudentProfile | null>(null);
+  const [assignTarget,  setAssignTarget]  = useState<AdminStudentProfile | null>(null);
 
   useEffect(() => {
     fetchStudentProfiles();
@@ -507,6 +627,13 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                           <td className="py-3.5 px-4">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
+                                onClick={() => setAssignTarget(p)}
+                                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                title="Assign Course"
+                              >
+                                <BookOpen className="h-3.5 w-3.5" />
+                              </button>
+                              <button
                                 onClick={() => setEditTarget(p)}
                                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 title="Edit"
@@ -540,9 +667,10 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
         </div>
       </div>
 
-      {showCreate && <CreateModal onClose={() => setShowCreate(false)} />}
-      {editTarget && <EditModal  profile={editTarget} onClose={() => setEditTarget(null)} />}
-      {delTarget  && <DeleteModal profile={delTarget} onClose={() => setDelTarget(null)} />}
+      {showCreate   && <CreateModal     onClose={() => setShowCreate(false)} />}
+      {editTarget   && <EditModal       profile={editTarget}   onClose={() => setEditTarget(null)} />}
+      {delTarget    && <DeleteModal     profile={delTarget}    onClose={() => setDelTarget(null)} />}
+      {assignTarget && <AssignCourseModal profile={assignTarget} onClose={() => setAssignTarget(null)} />}
     </div>
   );
 };

@@ -15,10 +15,12 @@ import AdminCourses from './pages/employees/admin/AdminCourses';
 import AdminStudents from './pages/employees/admin/AdminStudents';
 import AdminEmployees    from './pages/employees/admin/AdminEmployees';
 import AdminCourseDetail from './pages/employees/admin/AdminCourseDetail';
+import AdminSettings     from './pages/employees/admin/AdminSettings';
 import TrainerDashboard   from './pages/employees/trainer/TrainerDashboard';
 import TrainerSubmissions from './pages/employees/trainer/TrainerSubmissions';
 import TrainerStudents    from './pages/employees/trainer/TrainerStudents';
 import TrainerCourses     from './pages/employees/trainer/TrainerCourses';
+import TrainerSettings    from './pages/employees/trainer/TrainerSettings';
 import type { AdminViewType }   from './components/layout/AdminSidebar';
 import type { TrainerViewType } from './components/layout/TrainerSidebar';
 
@@ -51,6 +53,7 @@ function App() {
       if (adminView === 'admin-students')     return <AdminStudents     onViewChange={setAdminView} />;
       if (adminView === 'admin-employees')    return <AdminEmployees    onViewChange={setAdminView} />;
       if (adminView === 'admin-course-detail') return <AdminCourseDetail onViewChange={setAdminView} />;
+      if (adminView === 'admin-settings')     return <AdminSettings     onViewChange={setAdminView} />;
       return <AdminDashboard onViewChange={setAdminView} />;
     }
 
@@ -58,6 +61,7 @@ function App() {
       if (trainerView === 'trainer-submissions') return <TrainerSubmissions onViewChange={setTrainerView} />;
       if (trainerView === 'trainer-students')    return <TrainerStudents    onViewChange={setTrainerView} />;
       if (trainerView === 'trainer-courses')     return <TrainerCourses     onViewChange={setTrainerView} />;
+      if (trainerView === 'trainer-settings')    return <TrainerSettings    onViewChange={setTrainerView} />;
       return <TrainerDashboard onViewChange={setTrainerView} activeTab={trainerView} />;
     }
 
@@ -81,11 +85,7 @@ function App() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-transparent">
-      <Login />
-    </div>
-  );
+  return <Login />;
 }
 
 export default App;

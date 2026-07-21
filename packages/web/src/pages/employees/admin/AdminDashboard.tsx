@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Users, Building2, BookOpen, AlertCircle, ChevronRight,
   ClipboardList, UserCheck, Clock, CheckCircle2, RefreshCcw,
-  XCircle, TrendingUp,
+  XCircle, TrendingUp, GraduationCap,
 } from 'lucide-react';
 import { useAppStore } from '../../../store/login';
+import { useAdminStore } from '../../../store/Admin';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
@@ -12,61 +13,31 @@ import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 type SubmissionStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
 
-interface RecentSubmission {
-  id: number;
-  studentName: string;
-  assignmentTitle: string;
-  status: SubmissionStatus;
-  submittedAt: string;
-}
-
-interface PendingUser {
-  id: number;
-  fullName: string;
-  institution: string;
-  role: string;
-}
-
-const recentSubmissions: RecentSubmission[] = [
-  { id: 1, studentName: 'Arjun Mehta',    assignmentTitle: 'Security Audit Case Study',   status: 'SUBMITTED',              submittedAt: '2 hrs ago'  },
-  { id: 2, studentName: 'Kavya Reddy',    assignmentTitle: 'Network Topology Design',      status: 'UNDER_REVIEW',           submittedAt: '4 hrs ago'  },
-  { id: 3, studentName: 'Meera Krishnan', assignmentTitle: 'CI/CD Pipeline Setup',         status: 'REVIEWED',               submittedAt: 'Yesterday'  },
-  { id: 4, studentName: 'Rohan Kapoor',   assignmentTitle: 'Compliance Framework Essay',   status: 'RESUBMISSION_REQUIRED',  submittedAt: 'Jul 04'     },
-  { id: 5, studentName: 'Aditya Singh',   assignmentTitle: 'Sprint Planning Exercise',     status: 'SUBMITTED',              submittedAt: 'Jul 03'     },
-];
-
-const pendingUsers: PendingUser[] = [
-  { id: 1, fullName: 'Kavya Reddy',  institution: 'Nexus Institute',  role: 'Student' },
-  { id: 2, fullName: 'Rohan Kapoor', institution: 'Synergy College',  role: 'Student' },
-  { id: 3, fullName: 'Nisha Verma',  institution: 'Pioneer Training', role: 'Student' },
-  { id: 4, fullName: 'Suresh Babu',  institution: 'TechCorp Academy', role: 'Trainer' },
-];
-
-const enrollmentStats = [
-  { label: 'Assigned',    count: 42,  barColor: 'bg-amber-500',   textColor: 'text-amber-600',   cardBg: 'bg-amber-50'   },
-  { label: 'In Progress', count: 124, barColor: 'bg-blue-600',    textColor: 'text-blue-600',    cardBg: 'bg-blue-50'    },
-  { label: 'Completed',   count: 203, barColor: 'bg-emerald-500', textColor: 'text-emerald-600', cardBg: 'bg-emerald-50' },
-  { label: 'Cancelled',   count: 11,  barColor: 'bg-slate-400',   textColor: 'text-slate-500',   cardBg: 'bg-slate-100'  },
-];
-const totalEnrollments = enrollmentStats.reduce((s, e) => s + e.count, 0);
-
 const submissionCfg: Record<SubmissionStatus, { label: string; className: string; Icon: React.ElementType }> = {
-  SUBMITTED:             { label: 'Submitted',    className: 'bg-blue-50 text-blue-600 border-blue-100',         Icon: ClipboardList },
-  UNDER_REVIEW:          { label: 'Under Review', className: 'bg-amber-50 text-amber-600 border-amber-100',      Icon: Clock         },
-  REVIEWED:              { label: 'Reviewed',     className: 'bg-emerald-50 text-emerald-600 border-emerald-100',Icon: CheckCircle2  },
-  RESUBMISSION_REQUIRED: { label: 'Resubmission', className: 'bg-red-50 text-red-600 border-red-100',            Icon: RefreshCcw    },
+  SUBMITTED:             { label: 'Submitted',    className: 'bg-blue-50 text-blue-600 border-blue-100',          Icon: ClipboardList },
+  UNDER_REVIEW:          { label: 'Under Review', className: 'bg-amber-50 text-amber-600 border-amber-100',       Icon: Clock         },
+  REVIEWED:              { label: 'Reviewed',     className: 'bg-emerald-50 text-emerald-600 border-emerald-100', Icon: CheckCircle2  },
+  RESUBMISSION_REQUIRED: { label: 'Resubmission', className: 'bg-red-50 text-red-600 border-red-100',             Icon: RefreshCcw    },
 };
+
+const mockSubmissions = [
+  { id: 1, studentName: 'Arjun Mehta',    assignmentTitle: 'Security Audit Case Study',  status: 'SUBMITTED'             as SubmissionStatus, submittedAt: '2 hrs ago' },
+  { id: 2, studentName: 'Kavya Reddy',    assignmentTitle: 'Network Topology Design',     status: 'UNDER_REVIEW'          as SubmissionStatus, submittedAt: '4 hrs ago' },
+  { id: 3, studentName: 'Meera Krishnan', assignmentTitle: 'CI/CD Pipeline Setup',        status: 'REVIEWED'              as SubmissionStatus, submittedAt: 'Yesterday' },
+  { id: 4, studentName: 'Rohan Kapoor',   assignmentTitle: 'Compliance Framework Essay',  status: 'RESUBMISSION_REQUIRED' as SubmissionStatus, submittedAt: 'Jul 04'    },
+  { id: 5, studentName: 'Aditya Singh',   assignmentTitle: 'Sprint Planning Exercise',    status: 'SUBMITTED'             as SubmissionStatus, submittedAt: 'Jul 03'    },
+];
 
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
-  value: string;
-  trend: string;
+  value: string | number;
+  sub: string;
   iconClass: string;
   onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, label, value, trend, iconClass, onClick }) => (
+const StatCard: React.FC<StatCardProps> = ({ icon, label, value, sub, iconClass, onClick }) => (
   <button
     onClick={onClick}
     className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm shadow-slate-900/5 flex items-start gap-4 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-left w-full"
@@ -76,7 +47,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, trend, iconClas
       <p className="text-2xl font-extrabold text-[#001D6E] tracking-tight">{value}</p>
       <p className="text-xs font-semibold text-slate-500 mt-0.5">{label}</p>
       <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-0.5">
-        <TrendingUp className="h-2.5 w-2.5" />{trend}
+        <TrendingUp className="h-2.5 w-2.5" />{sub}
       </p>
     </div>
   </button>
@@ -85,7 +56,36 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, trend, iconClas
 const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Dashboard');
   const { currentUser } = useAppStore();
-  const emailName = currentUser?.email ? currentUser.email.split('@')[0] : 'Admin';
+  const {
+    users, courses, institutions, studentProfiles,
+    fetchUsers, fetchCourses, fetchInstitutions, fetchStudentProfiles,
+    updateUserStatus,
+  } = useAdminStore();
+
+  useEffect(() => {
+    fetchUsers();
+    fetchCourses();
+    fetchInstitutions();
+    fetchStudentProfiles();
+  }, []);
+
+  const totalUsers       = users.length;
+  const totalInstitutions = institutions.length;
+  const activeCourses    = useMemo(() => courses.filter((c) => c.status === 'ACTIVE').length, [courses]);
+  const pendingUsers     = useMemo(() => users.filter((u) => u.accountStatus === 'PENDING'), [users]);
+  const pendingCount     = pendingUsers.length;
+
+  const enrollmentStats = useMemo(() => {
+    const total = studentProfiles.length;
+    return [
+      { label: 'Total Students',  count: total,                                          barColor: 'bg-blue-600',    textColor: 'text-blue-600',    cardBg: 'bg-blue-50'    },
+      { label: 'Submitted Forms', count: studentProfiles.filter(p => p.formStatus === 'SUBMITTED').length, barColor: 'bg-amber-500',   textColor: 'text-amber-600',   cardBg: 'bg-amber-50'   },
+      { label: 'Verified',        count: studentProfiles.filter(p => p.formStatus === 'VERIFIED').length,  barColor: 'bg-emerald-500', textColor: 'text-emerald-600', cardBg: 'bg-emerald-50' },
+      { label: 'Pending Review',  count: studentProfiles.filter(p => p.formStatus === 'PENDING').length,   barColor: 'bg-slate-400',   textColor: 'text-slate-500',   cardBg: 'bg-slate-100'  },
+    ].map((s) => ({ ...s, pct: total > 0 ? Math.round((s.count / total) * 100) : 0 }));
+  }, [studentProfiles]);
+
+  const emailName   = currentUser?.email ? currentUser.email.split('@')[0] : 'Admin';
   const displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
 
   return (
@@ -114,30 +114,57 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
             <div>
               <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Welcome back, {displayName}</h1>
               <p className="text-sm text-slate-500 mt-1">
-                You have{' '}
-                <span className="font-bold text-amber-600">4 pending approvals</span> and{' '}
-                <span className="font-bold text-blue-600">5 new submissions</span> today.
+                {pendingCount > 0 ? (
+                  <>You have <span className="font-bold text-amber-600">{pendingCount} pending approval{pendingCount !== 1 ? 's' : ''}</span> waiting for action.</>
+                ) : (
+                  <>All user accounts are up to date. No pending approvals.</>
+                )}
               </p>
             </div>
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={<Users className="h-5 w-5" />}       label="Total Users"       value="247" trend="+12 this month"  iconClass="bg-blue-50 text-blue-600 border-blue-100"          onClick={() => onViewChange?.('admin-users')}        />
-              <StatCard icon={<Building2 className="h-5 w-5" />}   label="Institutions"      value="12"  trend="8 active"        iconClass="bg-indigo-50 text-indigo-600 border-indigo-100"    onClick={() => onViewChange?.('admin-institutions')} />
-              <StatCard icon={<BookOpen className="h-5 w-5" />}    label="Active Courses"    value="34"  trend="6 in draft"      iconClass="bg-emerald-50 text-emerald-600 border-emerald-100" onClick={() => onViewChange?.('admin-courses')}      />
-              <StatCard icon={<AlertCircle className="h-5 w-5" />} label="Pending Approvals" value="4"   trend="Action required" iconClass="bg-amber-50 text-amber-600 border-amber-100"       onClick={() => onViewChange?.('admin-users')}        />
+              <StatCard
+                icon={<Users className="h-5 w-5" />}
+                label="Total Users" value={totalUsers}
+                sub={`${users.filter(u => u.accountStatus === 'ACTIVE').length} active`}
+                iconClass="bg-blue-50 text-blue-600 border-blue-100"
+                onClick={() => onViewChange?.('admin-users')}
+              />
+              <StatCard
+                icon={<Building2 className="h-5 w-5" />}
+                label="Institutions" value={totalInstitutions}
+                sub={`${institutions.filter(i => i.status === 'ACTIVE').length} active`}
+                iconClass="bg-indigo-50 text-indigo-600 border-indigo-100"
+                onClick={() => onViewChange?.('admin-institutions')}
+              />
+              <StatCard
+                icon={<BookOpen className="h-5 w-5" />}
+                label="Active Courses" value={activeCourses}
+                sub={`${courses.filter(c => c.status === 'DRAFT').length} in draft`}
+                iconClass="bg-emerald-50 text-emerald-600 border-emerald-100"
+                onClick={() => onViewChange?.('admin-courses')}
+              />
+              <StatCard
+                icon={<AlertCircle className="h-5 w-5" />}
+                label="Pending Approvals" value={pendingCount}
+                sub={pendingCount > 0 ? 'Action required' : 'All clear'}
+                iconClass="bg-amber-50 text-amber-600 border-amber-100"
+                onClick={() => onViewChange?.('admin-users')}
+              />
             </div>
 
             {/* Submissions + Pending Approvals */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
+              {/* Recent Submissions (mock — no submissions API yet) */}
               <section className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm shadow-slate-900/5">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="font-extrabold text-[#001D6E] text-base">Recent Submissions</h3>
-                  <span className="text-[10px] font-bold text-white bg-blue-600 rounded-full px-2 py-0.5">{recentSubmissions.length}</span>
+                  <span className="text-[10px] font-bold text-white bg-blue-600 rounded-full px-2 py-0.5">{mockSubmissions.length}</span>
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {recentSubmissions.map((sub) => {
+                  {mockSubmissions.map((sub) => {
                     const cfg = submissionCfg[sub.status];
                     const StatusIcon = cfg.Icon;
                     return (
@@ -164,6 +191,7 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                 </div>
               </section>
 
+              {/* Pending Approvals — real data */}
               <section className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm shadow-slate-900/5">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="font-extrabold text-[#001D6E] text-base">Pending Approvals</h3>
@@ -175,36 +203,54 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                     <ChevronRight className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="divide-y divide-slate-100">
-                  {pendingUsers.map((user) => (
-                    <div key={user.id} className="py-3.5 first:pt-0 last:pb-0 flex justify-between items-center gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0 border border-amber-100">
-                          {user.fullName.slice(0, 2).toUpperCase()}
+
+                {pendingUsers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                    <CheckCircle2 className="h-8 w-8 mb-2 text-emerald-400" />
+                    <p className="text-sm font-semibold">No pending approvals</p>
+                    <p className="text-xs mt-0.5">All user accounts are active.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {pendingUsers.slice(0, 5).map((user) => (
+                      <div key={user.id} className="py-3.5 first:pt-0 last:pb-0 flex justify-between items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0 border border-amber-100">
+                            {user.fullName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate">{user.fullName}</p>
+                            <p className="text-[10px] text-slate-400 font-semibold truncate">{user.email} · {user.role}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{user.fullName}</p>
-                          <p className="text-[10px] text-slate-400 font-semibold truncate">{user.institution} · {user.role}</p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => updateUserStatus(user.id, 'ACTIVE')}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-100 hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                          >
+                            <UserCheck className="h-3 w-3" />Approve
+                          </button>
+                          <button
+                            onClick={() => updateUserStatus(user.id, 'REJECTED')}
+                            className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 text-[10px] font-extrabold border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors flex items-center gap-1"
+                          >
+                            <XCircle className="h-3 w-3" />Reject
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-100 hover:bg-emerald-100 transition-colors flex items-center gap-1">
-                          <UserCheck className="h-3 w-3" />Approve
-                        </button>
-                        <button className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 text-[10px] font-extrabold border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors flex items-center gap-1">
-                          <XCircle className="h-3 w-3" />Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </section>
             </div>
 
-            {/* Enrollment Overview */}
+            {/* Student Profile Overview — real data */}
             <section className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm shadow-slate-900/5">
               <div className="flex justify-between items-center mb-5">
-                <h3 className="font-extrabold text-[#001D6E] text-base">Enrollment Overview</h3>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-[#001D6E]" />
+                  <h3 className="font-extrabold text-[#001D6E] text-base">Student Profile Overview</h3>
+                </div>
                 <button
                   onClick={() => onViewChange?.('admin-students')}
                   className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5"
@@ -219,14 +265,9 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                     <p className={`text-2xl font-extrabold ${stat.textColor}`}>{stat.count}</p>
                     <p className="text-xs font-bold text-slate-600 mt-0.5">{stat.label}</p>
                     <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${stat.barColor} rounded-full`}
-                        style={{ width: `${Math.round((stat.count / totalEnrollments) * 100)}%` }}
-                      />
+                      <div className={`h-full ${stat.barColor} rounded-full`} style={{ width: `${stat.pct}%` }} />
                     </div>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                      {Math.round((stat.count / totalEnrollments) * 100)}% of total
-                    </p>
+                    <p className="text-[10px] text-slate-500 font-semibold mt-1">{stat.pct}% of total</p>
                   </div>
                 ))}
               </div>

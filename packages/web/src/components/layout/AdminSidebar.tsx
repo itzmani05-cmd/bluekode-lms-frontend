@@ -14,7 +14,8 @@ export type AdminViewType =
   | 'admin-courses'
   | 'admin-course-detail'
   | 'admin-students'
-  | 'admin-employees';
+  | 'admin-employees'
+  | 'admin-settings';
 
 interface AdminSidebarProps {
   activeTab: AdminViewType;
@@ -99,10 +100,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewCha
 
       <div className="p-3 border-t border-white/10 space-y-1.5">
         <button
+          onClick={() => onViewChange?.('admin-settings')}
           title={collapsed ? 'Settings' : undefined}
           className={`
             w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
-            text-white/70 hover:bg-white/5 hover:text-white transition-all duration-200
+            transition-all duration-200
+            ${activeTab === 'admin-settings'
+              ? 'bg-white/10 text-white shadow-sm border border-white/5'
+              : 'text-white/70 hover:bg-white/5 hover:text-white'
+            }
             ${collapsed ? 'justify-center' : ''}
           `}
         >

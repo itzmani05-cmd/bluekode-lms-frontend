@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException} from '@nestjs/common';
 import { FormStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
@@ -38,20 +33,39 @@ export class StudentProfilesService {
     if (!institution) throw new NotFoundException('Institution not found');
   }
 
-  async create(userId: number, dto: CreateStudentProfileDto, adminUserId: number) {
+  async create(
+    userId: number,
+    dto: CreateStudentProfileDto,
+    adminUserId: number,
+  ) {
     const user = await this.prisma.user.findFirst({
       where: { user_id: userId, is_deleted: false },
-      include: { userRoles: { select: { role: { select: { role_name: true } } } } },
+      include: {
+        userRoles: { select: { role: { select: { role_name: true } } } },
+      },
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const isStudent = user.userRoles.some((ur) => ur.role.role_name.toLowerCase() === 'student');
-    if (!isStudent) {
-      throw new BadRequestException('User does not have the Student role');
+    const isStudent = user.userRoles.some(
+      (ur) => ur.role.role_name.toLowerCase() === 'student',
+    );
+    if(!isStudent) 
+    {
+      const studentRole = await this.prisma.role.findFirst({
+        where: { role_name: { equals: 'student', mode: 'insensitive' } },
+      });
+      if(!studentRole) 
+      {
+        throw new BadRequestException(
+          "No 'Student' role found in the system. Please contact a system administrator.",
+        );
+      }
+      await this.prisma.userRole.create({
+        data: { user_id: userId, role_id: studentRole.role_id },
+      });
     }
-
     await this.ensureInstitutionExists(dto.institutionId);
-
+    
     try {
       const profile = await this.prisma.studentProfile.create({
         data: {
@@ -65,8 +79,12 @@ export class StudentProfilesService {
         select: STUDENT_PROFILE_SELECT,
       });
       return { success: true, data: profile };
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+    } 
+    catch (e) {
+      if(
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ){
         throw new ConflictException('This user already has a student profile');
       }
       throw e;
@@ -78,13 +96,13 @@ export class StudentProfilesService {
 
     const where: Prisma.StudentProfileWhereInput = {
       ...(institutionId && { institution_id: institutionId }),
-      ...(formStatus && { form_status: formStatus as FormStatus }),
+      ...(formStatus && { form_status: formStatus }),
       ...(search && {
         OR: [
           { department: { contains: search, mode: 'insensitive' } },
           { user: { full_name: { contains: search, mode: 'insensitive' } } },
           { user: { last_name: { contains: search, mode: 'insensitive' } } },
-          { user: { email:     { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
         ],
       }),
     };
@@ -100,14 +118,14 @@ export class StudentProfilesService {
       this.prisma.studentProfile.count({ where }),
     ]);
 
-    return {
+    return{
       success: true,
       data,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number){
     const profile = await this.prisma.studentProfile.findFirst({
       where: { student_profile_id: id },
       select: STUDENT_PROFILE_SELECT,
@@ -123,7 +141,8 @@ export class StudentProfilesService {
       select: STUDENT_PROFILE_SELECT,
     });
 
-    if (!profile) throw new NotFoundException('Student profile not found for this user');
+    if (!profile)
+      throw new NotFoundException('Student profile not found for this user');
     return { success: true, data: profile };
   }
 
@@ -134,11 +153,14 @@ export class StudentProfilesService {
       await this.ensureInstitutionExists(dto.institutionId);
     }
 
-    const data: Prisma.StudentProfileUncheckedUpdateInput = { updated_by: adminUserId };
-    if (dto.institutionId !== undefined) data.institution_id = dto.institutionId;
+    const data: Prisma.StudentProfileUncheckedUpdateInput = {
+      updated_by: adminUserId,
+    };
+    if (dto.institutionId !== undefined)
+      data.institution_id = dto.institutionId;
     if (dto.department !== undefined) data.department = dto.department;
     if (dto.academicYear !== undefined) data.academic_year = dto.academicYear;
-    if (dto.formStatus !== undefined) data.form_status = dto.formStatus as FormStatus;
+    if (dto.formStatus !== undefined) data.form_status = dto.formStatus;
 
     const profile = await this.prisma.studentProfile.update({
       where: { student_profile_id: id },
@@ -152,16 +174,12 @@ export class StudentProfilesService {
   async remove(id: number) {
     await this.findOne(id);
 
-    try {
-      await this.prisma.studentProfile.delete({ where: { student_profile_id: id } });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
-        throw new ConflictException(
-          'Cannot delete a student profile with existing course enrollments',
-        );
-      }
-      throw e;
-    }
+    await this.prisma.$transaction([
+      this.prisma.studentCourseEnrollment.deleteMany({
+        where: { student_profile_id: id },
+      }),
+      this.prisma.studentProfile.delete({ where: { student_profile_id: id } }),
+    ]);
 
     return { success: true, message: 'Student profile deleted successfully' };
   }

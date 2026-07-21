@@ -1,7 +1,8 @@
-import { Bell, HelpCircle, Menu, X, LayoutDashboard, BookOpen, FileText } from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, BookOpen, FileText, Settings, Info } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../store/login';
 import logo from '../../assests/logo.jpeg';
+import LearnMoreModal from './LearnMoreModal';
 
 type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
 
@@ -14,11 +15,13 @@ const navItems = [
     { key: 'dashboard' as ViewType, label: 'Dashboard', Icon: LayoutDashboard },
     { key: 'courses' as ViewType, label: 'My Courses', Icon: BookOpen },
     { key: 'assignments' as ViewType, label: 'Assignments', Icon: FileText },
+    { key: 'settings' as ViewType, label: 'Settings', Icon: Settings },
 
 ];
 
 const Header = ({ activeTab, onViewChange }: HeaderProps) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [learnMoreOpen, setLearnMoreOpen] = useState(false);
     const { currentUser } = useAppStore();
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +56,7 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white" />
                 </button>
-                <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                <button onClick={() => setLearnMoreOpen(true)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
                     <HelpCircle className="h-5 w-5" />
                 </button>
                 <div className="h-8 w-px bg-slate-200" />
@@ -134,10 +137,20 @@ const Header = ({ activeTab, onViewChange }: HeaderProps) => {
                             <HelpCircle className="h-4 w-4 text-slate-400" />
                             <span>Support</span>
                         </button>
+
+                        {/*Learn More*/}
+                        <button
+                            onClick={() => { setLearnMoreOpen(true); setMobileMenuOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                        >
+                            <Info className="h-4 w-4 text-slate-400" />
+                            <span>Learn More</span>
+                        </button>
                     </div>
                 )}
             </div>
 
+            {learnMoreOpen && <LearnMoreModal onClose={() => setLearnMoreOpen(false)} />}
         </header>
     );
 };

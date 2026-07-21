@@ -10,7 +10,8 @@ export type TrainerViewType =
   | 'trainer-dashboard'
   | 'trainer-submissions'
   | 'trainer-students'
-  | 'trainer-courses';
+  | 'trainer-courses'
+  | 'trainer-settings';
 
 interface TrainerSidebarProps {
   activeTab: TrainerViewType;
@@ -84,10 +85,15 @@ const TrainerSidebar: React.FC<TrainerSidebarProps> = ({ activeTab, onViewChange
 
       <div className="p-3 border-t border-white/10 space-y-1.5">
         <button
+          onClick={() => onViewChange?.('trainer-settings')}
           title={collapsed ? 'Settings' : undefined}
           className={`
             w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
-            text-white/70 hover:bg-white/5 hover:text-white transition-all duration-200
+            transition-all duration-200
+            ${activeTab === 'trainer-settings'
+              ? 'bg-white/10 text-white shadow-sm border border-white/5'
+              : 'text-white/70 hover:bg-white/5 hover:text-white'
+            }
             ${collapsed ? 'justify-center' : ''}
           `}
         >

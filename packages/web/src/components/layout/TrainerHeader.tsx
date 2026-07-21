@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, HelpCircle, Menu, X, LayoutDashboard, ClipboardList, GraduationCap, BookOpen } from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, ClipboardList, GraduationCap, BookOpen, Settings, Info } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { TrainerViewType } from './TrainerSidebar';
 import logo from '../../assests/logo.jpeg';
+import LearnMoreModal from './LearnMoreModal';
 
 interface TrainerHeaderProps {
   activeTab?: TrainerViewType;
@@ -14,10 +15,12 @@ const navItems: { key: TrainerViewType; label: string; Icon: React.ElementType }
   { key: 'trainer-submissions', label: 'Submissions', Icon: ClipboardList   },
   { key: 'trainer-students',    label: 'My Students', Icon: GraduationCap   },
   { key: 'trainer-courses',     label: 'My Courses',  Icon: BookOpen        },
+  { key: 'trainer-settings',    label: 'Settings',    Icon: Settings        },
 ];
 
 const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [learnMoreOpen, setLearnMoreOpen] = useState(false);
   const { currentUser } = useAppStore();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +58,13 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
         </button>
         <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
           <HelpCircle className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => setLearnMoreOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+        >
+          <Info className="h-4 w-4" />
+          Learn More
         </button>
         <div className="h-8 w-px bg-slate-200" />
         <div className="flex items-center gap-2">
@@ -120,9 +130,18 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
               <HelpCircle className="h-4 w-4 text-slate-400" />
               <span>Support</span>
             </button>
+            <button
+              onClick={() => { setLearnMoreOpen(true); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+            >
+              <Info className="h-4 w-4 text-slate-400" />
+              <span>Learn More</span>
+            </button>
           </div>
         )}
       </div>
+
+      {learnMoreOpen && <LearnMoreModal onClose={() => setLearnMoreOpen(false)} />}
     </header>
   );
 };

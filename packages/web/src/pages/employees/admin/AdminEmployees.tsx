@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
-import { Briefcase, ArrowLeftRight } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Briefcase, ArrowLeftRight, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
-import type { EmployeeStatus } from '../../../store/Admin';
+import type { EmployeeStatus, Employee } from '../../../store/Admin';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 interface TrainerSubstitution {
@@ -44,14 +44,357 @@ const filterTabs: { key: string; label: string }[] = [
   { key: 'INACTIVE', label: 'Inactive' },
 ];
 
+const STAFF_ROLES = ['trainer', 'technical head', 'project head'];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const inputCls = (err?: boolean) =>
+  `w-full px-3 py-2.5 border rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all ${
+    err ? 'border-red-300 focus:ring-red-400/10' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10'
+  }`;
+
+const labelCls = 'text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5';
+
+// ── Create Modal ──────────────────────────────────────────────────────────────
+
+interface CreateModalProps {
+  onClose: () => void;
+}
+
+const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
+  const { users, createEmployeeProfile, isLoading, error } = useAdminStore();
+
+  const eligibleUsers = useMemo(
+    () => users.filter((u) => STAFF_ROLES.includes(u.role)),
+    [users],
+  );
+
+  const [userId,         setUserId]         = useState('');
+  const [designation,    setDesignation]    = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [experience,     setExperience]     = useState('');
+  const [joiningDate,    setJoiningDate]    = useState('');
+  const [localError,     setLocalError]     = useState('');
+  const [saving,         setSaving]         = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) { setLocalError('Please select a staff user.'); return; }
+    setLocalError('');
+    setSaving(true);
+    try {
+      await createEmployeeProfile(Number(userId), {
+        designation:       designation || undefined,
+        specialization:    specialization || undefined,
+        yearsOfExperience: experience ? Number(experience) : undefined,
+        joiningDate:       joiningDate || undefined,
+      });
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to create employee profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayError = localError || error;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-blue-600 rounded-t-2xl" />
+
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+          <h2 className="text-base font-extrabold text-[#001D6E]">Add Employee Profile</h2>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {displayError && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{displayError}</p>
+            </div>
+          )}
+
+          {/* Staff user */}
+          <div>
+            <label className={labelCls}>Staff User *</label>
+            <select value={userId} onChange={(e) => setUserId(e.target.value)} className={inputCls()}>
+              <option value="">Select staff user...</option>
+              {eligibleUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.fullName} — {u.email}
+                </option>
+              ))}
+            </select>
+            {eligibleUsers.length === 0 && (
+              <p className="text-[10px] text-amber-500 font-semibold mt-1">
+                No staff-role users found. Create a user with the Trainer, Technical Head, or Project Head role first.
+              </p>
+            )}
+            <p className="text-[10px] text-slate-400 font-semibold mt-1">
+              If this user already has a profile, use the edit action on their row instead.
+            </p>
+          </div>
+
+          {/* Designation */}
+          <div>
+            <label className={labelCls}>Designation</label>
+            <input
+              type="text" value={designation} placeholder="e.g. Senior Trainer"
+              onChange={(e) => setDesignation(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          {/* Specialization */}
+          <div>
+            <label className={labelCls}>Specialization</label>
+            <input
+              type="text" value={specialization} placeholder="e.g. Backend Development"
+              onChange={(e) => setSpecialization(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Years of Experience</label>
+              <input
+                type="number" min={0} max={70} value={experience}
+                onChange={(e) => setExperience(e.target.value)} className={inputCls()}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Joining Date</label>
+              <input
+                type="date" value={joiningDate}
+                onChange={(e) => setJoiningDate(e.target.value)} className={inputCls()}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2 pb-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit" disabled={saving || isLoading}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {saving ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Saving...</> : 'Create Profile'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+
+interface EditModalProps {
+  employee: Employee;
+  onClose: () => void;
+}
+
+const EditModal: React.FC<EditModalProps> = ({ employee, onClose }) => {
+  const { updateEmployeeProfile, error } = useAdminStore();
+
+  const [designation,    setDesignation]    = useState(employee.designationRaw ?? '');
+  const [specialization, setSpecialization] = useState(employee.specializationRaw ?? '');
+  const [experience,     setExperience]     = useState(String(employee.yearsOfExperience || ''));
+  const [joiningDate,    setJoiningDate]    = useState(employee.joiningDateRaw ?? '');
+  const [isActive,       setIsActive]       = useState(employee.isActive);
+  const [saving,         setSaving]         = useState(false);
+  const [localError,     setLocalError]     = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+    setSaving(true);
+    try {
+      await updateEmployeeProfile(employee.id, {
+        designation:       designation || undefined,
+        specialization:    specialization || undefined,
+        yearsOfExperience: experience ? Number(experience) : undefined,
+        joiningDate:       joiningDate || undefined,
+        isActive,
+      });
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to update employee profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayError = localError || error;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-blue-600 rounded-t-2xl" />
+
+        <div className="px-6 pt-6 pb-2 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-extrabold text-[#001D6E]">Edit Employee Profile</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-0.5">{employee.fullName} · {employee.email}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {displayError && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{displayError}</p>
+            </div>
+          )}
+
+          <div>
+            <label className={labelCls}>Designation</label>
+            <input
+              type="text" value={designation} placeholder="e.g. Senior Trainer"
+              onChange={(e) => setDesignation(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Specialization</label>
+            <input
+              type="text" value={specialization} placeholder="e.g. Backend Development"
+              onChange={(e) => setSpecialization(e.target.value)} className={inputCls()}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Years of Experience</label>
+              <input
+                type="number" min={0} max={70} value={experience}
+                onChange={(e) => setExperience(e.target.value)} className={inputCls()}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Joining Date</label>
+              <input
+                type="date" value={joiningDate}
+                onChange={(e) => setJoiningDate(e.target.value)} className={inputCls()}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Status</label>
+            <select
+              value={isActive ? 'ACTIVE' : 'INACTIVE'}
+              onChange={(e) => setIsActive(e.target.value === 'ACTIVE')}
+              className={inputCls()}
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-2 pb-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit" disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {saving ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Saving...</> : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Delete Modal ──────────────────────────────────────────────────────────────
+
+interface DeleteModalProps {
+  employee: Employee;
+  onClose: () => void;
+}
+
+const DeleteModal: React.FC<DeleteModalProps> = ({ employee, onClose }) => {
+  const { deleteEmployeeProfile } = useAdminStore();
+  const [deleting,   setDeleting]   = useState(false);
+  const [localError, setLocalError] = useState('');
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteEmployeeProfile(employee.id);
+      onClose();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setLocalError(msg ?? 'Failed to delete employee profile.');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-red-500 rounded-t-2xl" />
+        <div className="p-6">
+          <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center mb-4">
+            <Trash2 className="h-5 w-5" />
+          </div>
+          <h2 className="text-base font-extrabold text-slate-900">Delete Employee Profile</h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1.5">
+            This will permanently delete <span className="text-slate-800">{employee.fullName}</span>'s profile. Employees with existing institution assignments, reviewed submissions, or trainer substitutions cannot be deleted.
+          </p>
+          {localError && (
+            <div className="flex items-start gap-2 p-3 mt-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-semibold">{localError}</p>
+            </div>
+          )}
+          <div className="flex gap-3 mt-5">
+            <button onClick={onClose} className="flex-1 py-2.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete} disabled={deleting}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-60 rounded-xl transition-colors"
+            >
+              {deleting ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Deleting...</> : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
 const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Employees');
   const {
-    employees, isLoading, error, fetchEmployees,
+    employees, users, isLoading, error, fetchEmployees, fetchUsers,
     employeeSearchQuery, employeeStatusFilter, setEmployeeSearchQuery, setEmployeeStatusFilter,
   } = useAdminStore();
 
-  useEffect(() => { fetchEmployees(); }, []);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<Employee | null>(null);
+  const [delTarget,  setDelTarget]  = useState<Employee | null>(null);
+
+  useEffect(() => {
+    fetchEmployees();
+    if (users.length === 0) fetchUsers();
+  }, []);
 
   const filtered = useMemo(() => {
     return employees.filter((e) => {
@@ -87,6 +430,12 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                 <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Employees</h1>
                 <p className="text-sm text-slate-500 mt-1">{employees.length} employees · {counts.ACTIVE} active across all institutions.</p>
               </div>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Add Employee
+              </button>
             </div>
 
             {/* Employee Table */}
@@ -129,6 +478,13 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                 </div>
               </div>
 
+              {error && (
+                <div className="flex items-start gap-2 p-4 bg-red-50 border-b border-red-200 text-red-700 text-xs">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <p className="font-semibold">{error}</p>
+                </div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -139,30 +495,25 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                       <th className="text-center py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Exp.</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Institution</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="text-right py-3 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {isLoading ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
+                        <td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">
                           Loading employees...
-                        </td>
-                      </tr>
-                    ) : error ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-sm text-red-500 font-semibold">
-                          {error}
                         </td>
                       </tr>
                     ) : employees.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
-                          No employee profiles found. Create employee profiles from the Users page.
+                        <td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">
+                          No employee profiles found. Create a staff user on the Users page, then add their profile here.
                         </td>
                       </tr>
                     ) : filtered.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">
+                        <td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">
                           No employees match your search.
                         </td>
                       </tr>
@@ -202,6 +553,24 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                             <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${sCfg.className}`}>
                               {sCfg.label}
                             </span>
+                          </td>
+                          <td className="py-4 px-5">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => setEditTarget(emp)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setDelTarget(emp)}
+                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -269,6 +638,10 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
           </main>
         </div>
       </div>
+
+      {showCreate && <CreateModal onClose={() => setShowCreate(false)} />}
+      {editTarget  && <EditModal employee={editTarget} onClose={() => setEditTarget(null)} />}
+      {delTarget   && <DeleteModal employee={delTarget} onClose={() => setDelTarget(null)} />}
     </div>
   );
 };

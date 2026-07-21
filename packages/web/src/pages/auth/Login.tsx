@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import {Eye, EyeOff, Lock, Mail, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 import { loginSchema } from '../../schemas/login';
