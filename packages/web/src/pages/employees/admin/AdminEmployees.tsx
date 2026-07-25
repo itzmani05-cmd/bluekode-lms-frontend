@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Briefcase, ArrowLeftRight, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Briefcase, ArrowLeftRight, Pencil, Trash2, X, RefreshCw, AlertTriangle } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
@@ -430,12 +430,6 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                 <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Employees</h1>
                 <p className="text-sm text-slate-500 mt-1">{employees.length} employees · {counts.ACTIVE} active across all institutions.</p>
               </div>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
-              >
-                <Plus className="h-4 w-4" /> Add Employee
-              </button>
             </div>
 
             {/* Employee Table */}
@@ -508,7 +502,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                     ) : employees.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-12 text-center text-sm text-slate-400 font-semibold">
-                          No employee profiles found. Create a staff user on the Users page, then add their profile here.
+                          No employee profiles found.
                         </td>
                       </tr>
                     ) : filtered.length === 0 ? (

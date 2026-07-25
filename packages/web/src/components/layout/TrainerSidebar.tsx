@@ -29,7 +29,7 @@ const TrainerSidebar: React.FC<TrainerSidebarProps> = ({ activeTab, onViewChange
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    useAppStore.setState({ isAuthenticated: false, currentUser: null, successMsg: null, error: null });
+    useAppStore.getState().logout();
   };
 
   return (

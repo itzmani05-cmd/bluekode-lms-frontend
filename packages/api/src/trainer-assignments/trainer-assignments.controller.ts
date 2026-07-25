@@ -68,6 +68,13 @@ export class TrainerAssignmentsController {
     return this.service.getAccessibleStudents(employeeProfileId);
   }
 
+  @Get('trainer/:employeeProfileId/submissions')
+  @ApiOperation({ summary: "Get all assignment submissions from a trainer's accessible students" })
+  @ApiParam({ name: 'employeeProfileId', type: Number })
+  getStudentSubmissions(@Param('employeeProfileId', ParseIntPipe) employeeProfileId: number) {
+    return this.service.getStudentSubmissions(employeeProfileId);
+  }
+
   @Delete(':id')
   @Roles('Admin')
   @ApiOperation({ summary: 'Remove a trainer assignment (Admin only)' })

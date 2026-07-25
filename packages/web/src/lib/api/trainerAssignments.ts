@@ -85,3 +85,29 @@ export const fetchAccessibleStudentsApi = (employeeProfileId: number) =>
 
 export const deleteTrainerAssignmentApi = (id: number) =>
   api.delete(`/trainer-assignments/${id}`).then((r) => r.data);
+
+export type TrainerSubmissionStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
+
+export interface TrainerStudentSubmission {
+  submission_id:     string;
+  student_name:      string;
+  course_name:       string;
+  assignment_title:  string;
+  module_name:       string;
+  submission_status: TrainerSubmissionStatus;
+  attempt_no:        number;
+  submission_url:    string | null;
+  remarks:           string | null;
+  marks_obtained:    number | null;
+  max_marks:         number | null;
+  trainer_feedback:  string | null;
+  submitted_at:      string | null;
+  reviewed_at:       string | null;
+}
+
+export const fetchTrainerStudentSubmissionsApi = (employeeProfileId: number) =>
+  api
+    .get<{ success: boolean; data: TrainerStudentSubmission[] }>(
+      `/trainer-assignments/trainer/${employeeProfileId}/submissions`,
+    )
+    .then((r) => r.data.data);

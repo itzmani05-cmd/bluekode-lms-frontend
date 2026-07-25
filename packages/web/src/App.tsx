@@ -77,7 +77,7 @@ function App() {
             The {currentUser.role} console is authorized for {currentUser.email}.
           </p>
           <button
-            onClick={() => useAppStore.setState({ isAuthenticated: false, currentUser: null, successMsg: null, error: null })}
+            onClick={() => useAppStore.getState().logout()}
             className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-md shadow-blue-500/10 transition-colors"
           >
             Logout Session

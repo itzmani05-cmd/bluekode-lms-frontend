@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  GraduationCap, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle, Building2, BookOpen,
+  GraduationCap, Pencil, Trash2, X, RefreshCw, AlertTriangle, Building2, BookOpen,
 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
@@ -467,10 +467,11 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
     fetchStudentProfiles, fetchInstitutions, fetchUsers,
   } = useAdminStore();
 
-  const [showCreate,    setShowCreate]    = useState(false);
-  const [editTarget,    setEditTarget]    = useState<AdminStudentProfile | null>(null);
-  const [delTarget,     setDelTarget]     = useState<AdminStudentProfile | null>(null);
-  const [assignTarget,  setAssignTarget]  = useState<AdminStudentProfile | null>(null);
+  const [showCreate,         setShowCreate]         = useState(false);
+  const [editTarget,         setEditTarget]         = useState<AdminStudentProfile | null>(null);
+  const [delTarget,          setDelTarget]          = useState<AdminStudentProfile | null>(null);
+  const [assignTarget,       setAssignTarget]       = useState<AdminStudentProfile | null>(null);
+  const [institutionFilter,  setInstitutionFilter]  = useState('all');
 
   useEffect(() => {
     fetchStudentProfiles();
@@ -487,10 +488,11 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
         || p.email.toLowerCase().includes(q)
         || (p.department ?? '').toLowerCase().includes(q)
         || p.institutionName.toLowerCase().includes(q);
-      const matchForm = studentFormStatusFilter === 'all' || p.formStatus === studentFormStatusFilter;
-      return matchSearch && matchForm;
+      const matchForm        = studentFormStatusFilter === 'all' || p.formStatus === studentFormStatusFilter;
+      const matchInstitution = institutionFilter === 'all' || p.institutionId === Number(institutionFilter);
+      return matchSearch && matchForm && matchInstitution;
     });
-  }, [studentProfiles, studentSearchQuery, studentFormStatusFilter]);
+  }, [studentProfiles, studentSearchQuery, studentFormStatusFilter, institutionFilter]);
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
@@ -510,12 +512,6 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                 <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Students</h1>
                 <p className="text-sm text-slate-500 mt-1">{studentProfiles.length} student profile{studentProfiles.length !== 1 ? 's' : ''} in the system.</p>
               </div>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
-              >
-                <Plus className="h-4 w-4" /> Add Student Profile
-              </button>
             </div>
 
             {/* Error banner */}
@@ -551,6 +547,16 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                     <option key={s} value={s}>{formStatusCfg[s].label}</option>
                   ))}
                 </select>
+                <select
+                  value={institutionFilter}
+                  onChange={(e) => setInstitutionFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-400 transition-all"
+                >
+                  <option value="all">All Institutions</option>
+                  {institutions.map((i) => (
+                    <option key={i.id} value={i.id}>{i.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Table */}
@@ -580,7 +586,7 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                           <p className="text-sm text-slate-400 font-semibold">
                             {studentSearchQuery || studentFormStatusFilter !== 'all'
                               ? 'No students match your filters.'
-                              : 'No student profiles yet. Click "Add Student Profile" to create one.'}
+                              : 'No student profiles found.'}
                           </p>
                         </td>
                       </tr>

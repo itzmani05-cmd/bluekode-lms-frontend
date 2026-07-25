@@ -29,6 +29,7 @@ export interface Lesson {
   estimatedDurationMinutes: number | null;
   dueDate:                  string | null;
   maxMarks:                 number | null;
+  assignmentStatus:         string | null;
 }
 
 const mapLecture = (l: ApiLecture): Lesson => ({
@@ -43,6 +44,7 @@ const mapLecture = (l: ApiLecture): Lesson => ({
   estimatedDurationMinutes: l.estimated_duration_minutes,
   dueDate:                  l.due_date ? l.due_date.split('T')[0] : null,
   maxMarks:                 l.max_marks,
+  assignmentStatus:         l.assignment_status,
 });
 
 export interface CreateLessonPayload {

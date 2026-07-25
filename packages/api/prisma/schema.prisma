@@ -129,6 +129,7 @@ model User {
   enrollments_created       StudentCourseEnrollment[] @relation("EnrollmentCreatedBy")
   enrollments_updated       StudentCourseEnrollment[] @relation("EnrollmentUpdatedBy")
   rolePermissions           RolePermission[]     @relation("RolePermissionAssignedBy")
+  notifications             Notification[]
 
   @@map("users")
 }
@@ -469,6 +470,21 @@ model TrainerSubstitution {
   replacementTrainer EmployeeProfile @relation("ReplacementTrainer", fields: [replacement_trainer_id], references: [employee_profile_id])
 
   @@map("trainer_substitutions")
+}
+
+model Notification {
+  notification_id Int       @id @default(autoincrement())
+  user_id         Int
+  title           String    @db.VarChar(255)
+  message         String    @db.Text
+  is_read         Boolean   @default(false)
+  created_at      DateTime? @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@index([is_read])
+  @@map("notifications")
 }
 
 model TrainerAssignment {

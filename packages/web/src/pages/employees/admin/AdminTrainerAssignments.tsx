@@ -38,20 +38,19 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
     fetchEmployees, fetchCourses, fetchInstitutions, fetchStudentProfiles,
   } = useAdminStore();
 
-  const [trainerId,        setTrainerId]        = useState('');
-  const [courseId,         setCourseId]         = useState('');
-  const [assignmentType,   setAssignmentType]   = useState<AssignmentType>('STUDENT');
-  const [institutionId,    setInstitutionId]    = useState('');
-  const [studentSearch,    setStudentSearch]    = useState('');
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-  const [localError,       setLocalError]       = useState('');
-  const [saving,           setSaving]           = useState(false);
+  const [trainerId,      setTrainerId]      = useState('');
+  const [courseId,       setCourseId]       = useState('');
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>('STUDENT');
+  const [institutionId,  setInstitutionId]  = useState('');
+  const [studentId,      setStudentId]      = useState('');
+  const [localError,     setLocalError]     = useState('');
+  const [saving,         setSaving]         = useState(false);
 
   useEffect(() => {
-    if (employees.length === 0)        fetchEmployees();
-    if (courses.length === 0)          fetchCourses();
-    if (institutions.length === 0)     fetchInstitutions();
-    if (studentProfiles.length === 0)  fetchStudentProfiles();
+    if (employees.length === 0)    fetchEmployees();
+    if (courses.length === 0)      fetchCourses();
+    if (institutions.length === 0) fetchInstitutions();
+    fetchStudentProfiles();
   }, []);
 
   const trainerEmployees = useMemo(
@@ -64,29 +63,14 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
     [courses],
   );
 
-  const filteredStudents = useMemo(() => {
-    const q = studentSearch.toLowerCase();
-    return studentProfiles.filter((s) => {
-      if (!q) return true;
-      const name = `${s.fullName}`.toLowerCase();
-      return name.includes(q) || s.email.toLowerCase().includes(q);
-    });
-  }, [studentProfiles, studentSearch]);
-
-  const toggleStudent = (id: number) => {
-    setSelectedStudents((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
 
     if (!trainerId)  { setLocalError('Please select a trainer.'); return; }
     if (!courseId)   { setLocalError('Please select a course.'); return; }
-    if (assignmentType === 'STUDENT' && selectedStudents.length === 0) {
-      setLocalError('Please select at least one student.');
+    if (assignmentType === 'STUDENT' && !studentId) {
+      setLocalError('Please select a student.');
       return;
     }
     if (assignmentType === 'INSTITUTION' && !institutionId) {
@@ -97,14 +81,12 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
     setSaving(true);
     try {
       if (assignmentType === 'STUDENT') {
-        for (const studentProfileId of selectedStudents) {
-          await createTrainerAssignment({
-            trainerEmployeeProfileId: Number(trainerId),
-            courseId: Number(courseId),
-            assignmentType: 'STUDENT',
-            studentProfileId,
-          });
-        }
+        await createTrainerAssignment({
+          trainerEmployeeProfileId: Number(trainerId),
+          courseId: Number(courseId),
+          assignmentType: 'STUDENT',
+          studentProfileId: Number(studentId),
+        });
       } else {
         await createTrainerAssignment({
           trainerEmployeeProfileId: Number(trainerId),
@@ -116,7 +98,7 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
       onClose();
     } catch (err) {
       const msg = (err as Error).message;
-      setLocalError(msg.includes('already exists') ? 'One or more assignments already exist for this trainer and course.' : msg);
+      setLocalError(msg.includes('already exists') ? 'Assignment already exists for this trainer and course.' : msg);
     } finally {
       setSaving(false);
     }
@@ -182,7 +164,7 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
                   <button
                     key={t}
                     type="button"
-                    onClick={() => { setAssignmentType(t); setSelectedStudents([]); setInstitutionId(''); }}
+                    onClick={() => { setAssignmentType(t); setStudentId(''); setInstitutionId(''); }}
                     className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all
                       ${active
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -216,47 +198,22 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
 
           {assignmentType === 'STUDENT' && (
             <div>
-              <label className={labelCls}>
-                Students * <span className="text-blue-500 normal-case font-semibold">({selectedStudents.length} selected)</span>
-              </label>
-              <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={studentSearch}
-                  onChange={(e) => setStudentSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10"
-                />
-              </div>
-              <div className="border border-slate-200 rounded-xl overflow-hidden max-h-44 overflow-y-auto">
-                {filteredStudents.length === 0 ? (
-                  <p className="text-xs text-slate-400 font-semibold p-4 text-center">No students found.</p>
-                ) : filteredStudents.map((s) => {
-                  const checked = selectedStudents.includes(s.id);
-                  return (
-                    <label
-                      key={s.id}
-                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-slate-50 border-b border-slate-50 last:border-0
-                        ${checked ? 'bg-blue-50/60' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleStudent(s.id)}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
-                      />
-                      <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-700 font-extrabold text-[10px] flex items-center justify-center shrink-0">
-                        {s.fullName.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate">{s.fullName}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold truncate">{s.email}</p>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+              <label className={labelCls}>Student *</label>
+              <select value={studentId} onChange={(e) => setStudentId(e.target.value)} className={inputCls()}>
+                <option value="">
+                  {isLoading ? 'Loading students...' : studentProfiles.length === 0 ? 'No students found' : 'Select student...'}
+                </option>
+                {studentProfiles.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {`${s.fullName}${s.lastName ? ` ${s.lastName}` : ''}`} — {s.email}
+                  </option>
+                ))}
+              </select>
+              {!isLoading && studentProfiles.length === 0 && (
+                <p className="text-[10px] text-amber-500 font-semibold mt-1">
+                  No student profiles found. Create student profiles first.
+                </p>
+              )}
             </div>
           )}
 

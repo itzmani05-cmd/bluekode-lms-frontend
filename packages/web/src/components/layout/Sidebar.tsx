@@ -27,9 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onViewChange }) => 
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    useAppStore.setState({ 
-      isAuthenticated: false, currentUser: null, successMsg: null, error: null 
-    });
+    useAppStore.getState().logout();
   };
 
   return (

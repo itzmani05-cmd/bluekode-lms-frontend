@@ -308,7 +308,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   fetchStudentProfiles: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await fetchAllStudentProfilesApi();
+      const { data } = await fetchAllStudentProfilesApi({ limit: 1000 });
       set({ studentProfiles: data, isLoading: false });
     } catch {
       set({ error: 'Failed to load student profiles.', isLoading: false });

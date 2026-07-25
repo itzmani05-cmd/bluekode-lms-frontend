@@ -17,6 +17,7 @@ import { LecturesModule } from './lectures/lectures.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
 import { AssignmentSubmissionsModule } from './assignment-submissions/assignment-submissions.module';
 import { TrainerAssignmentsModule } from './trainer-assignments/trainer-assignments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { TrainerAssignmentsModule } from './trainer-assignments/trainer-assignme
     StudentProgressModule,
     AssignmentSubmissionsModule,
     TrainerAssignmentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -284,6 +284,135 @@ export class TrainerAssignmentsService {
     return { success: true, data: results };
   }
 
+  async getStudentSubmissions(employeeProfileId: number) {
+    await this.ensureTrainerExists(employeeProfileId);
+
+    const assignments = await this.prisma.trainerAssignment.findMany({
+      where: { trainer_employee_profile_id: employeeProfileId },
+      select: {
+        assignment_type: true,
+        course_id:       true,
+        student_profile_id: true,
+        institution_id:  true,
+        course:          { select: { course_name: true } },
+      },
+    });
+
+    // Collect unique enrollment IDs + metadata
+    const seenEnrollments = new Set<number>();
+    const enrollmentMeta  = new Map<number, { studentName: string; courseName: string }>();
+
+    for (const a of assignments) {
+      if (a.assignment_type === 'STUDENT' && a.student_profile_id) {
+        const enr = await this.prisma.studentCourseEnrollment.findFirst({
+          where: { student_profile_id: a.student_profile_id, course_id: a.course_id },
+          select: {
+            enrollment_id:  true,
+            studentProfile: { select: { user: { select: { full_name: true, last_name: true } } } },
+          },
+        });
+        if (enr && !seenEnrollments.has(enr.enrollment_id)) {
+          seenEnrollments.add(enr.enrollment_id);
+          enrollmentMeta.set(enr.enrollment_id, {
+            studentName: `${enr.studentProfile.user.full_name} ${enr.studentProfile.user.last_name}`.trim(),
+            courseName:  a.course.course_name,
+          });
+        }
+      }
+
+      if (a.assignment_type === 'INSTITUTION' && a.institution_id) {
+        const enrs = await this.prisma.studentCourseEnrollment.findMany({
+          where: {
+            course_id:      a.course_id,
+            studentProfile: { institution_id: a.institution_id },
+          },
+          select: {
+            enrollment_id:  true,
+            studentProfile: { select: { user: { select: { full_name: true, last_name: true } } } },
+          },
+        });
+        for (const enr of enrs) {
+          if (!seenEnrollments.has(enr.enrollment_id)) {
+            seenEnrollments.add(enr.enrollment_id);
+            enrollmentMeta.set(enr.enrollment_id, {
+              studentName: `${enr.studentProfile.user.full_name} ${enr.studentProfile.user.last_name}`.trim(),
+              courseName:  a.course.course_name,
+            });
+          }
+        }
+      }
+    }
+
+    const results: {
+      submission_id:     string;
+      student_name:      string;
+      course_name:       string;
+      assignment_title:  string;
+      module_name:       string;
+      submission_status: string;
+      attempt_no:        number;
+      submission_url:    string | null;
+      remarks:           string | null;
+      marks_obtained:    number | null;
+      max_marks:         number | null;
+      trainer_feedback:  string | null;
+      submitted_at:      Date | null;
+      reviewed_at:       Date | null;
+    }[] = [];
+
+    for (const [enrollmentId, meta] of enrollmentMeta.entries()) {
+      const subs = await this.prisma.assignmentSubmission.findMany({
+        where:   { enrollment_id: enrollmentId },
+        orderBy: { created_at: 'desc' },
+        select: {
+          submission_id:     true,
+          attempt_no:        true,
+          submission_url:    true,
+          remarks:           true,
+          marks_obtained:    true,
+          trainer_feedback:  true,
+          submission_status: true,
+          created_at:        true,
+          reviewed_at:       true,
+          lecture: {
+            select: {
+              title:    true,
+              max_marks: true,
+              module:   { select: { module_name: true } },
+            },
+          },
+        },
+      });
+
+      for (const sub of subs) {
+        results.push({
+          submission_id:    sub.submission_id.toString(),
+          student_name:     meta.studentName,
+          course_name:      meta.courseName,
+          assignment_title: sub.lecture.title,
+          module_name:      sub.lecture.module.module_name,
+          submission_status: sub.submission_status,
+          attempt_no:       sub.attempt_no,
+          submission_url:   sub.submission_url ?? null,
+          remarks:          sub.remarks ?? null,
+          marks_obtained:   sub.marks_obtained !== null ? Number(sub.marks_obtained) : null,
+          max_marks:        sub.lecture.max_marks !== null ? Number(sub.lecture.max_marks) : null,
+          trainer_feedback: sub.trainer_feedback ?? null,
+          submitted_at:     sub.created_at,
+          reviewed_at:      sub.reviewed_at,
+        });
+      }
+    }
+
+    results.sort((a, b) => {
+      if (!a.submitted_at) return 1;
+      if (!b.submitted_at) return -1;
+      return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+    });
+
+    return { success: true, data: results };
+  }
+
   async remove(id: number) {
     const existing = await this.prisma.trainerAssignment.findUnique({
       where: { trainer_assignment_id: id },

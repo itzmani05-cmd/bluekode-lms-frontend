@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { loginApi, changePasswordApi, completeProfileApi } from '../lib/api/auth';
 import type { CompleteProfilePayload } from '../lib/api/auth';
 import { setAuthToken, clearAuthToken } from '../lib/axios';
+import { useStudentStore } from './Student';
 
 export type UserRole        = 'student' | 'trainer' | 'technical head' | 'project head' | 'admin';
 export type AccountStatus   = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'INACTIVE' | 'REJECTED';
@@ -111,6 +112,7 @@ export const useAppStore = create<AuthState>()(
 
       logout: () => {
         clearAuthToken();
+        useStudentStore.getState().resetStudentStore();
         set({ currentUser: null, isAuthenticated: false, error: null, successMsg: null });
       },
 

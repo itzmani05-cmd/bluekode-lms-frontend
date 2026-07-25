@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AssignmentSubmissionsService } from './assignment-submissions.service';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
+import { ReviewSubmissionDto } from './dto/review-submission.dto';
 
 @ApiTags('Assignment Submissions')
 @ApiBearerAuth()
@@ -16,6 +17,18 @@ export class AssignmentSubmissionsController {
   @ApiResponse({ status: 404, description: 'Enrollment not found' })
   findLatestForEnrollment(@Param('enrollmentId', ParseIntPipe) enrollmentId: number) {
     return this.submissionsService.findLatestForEnrollment(enrollmentId);
+  }
+
+  @Patch('submissions/:id/review')
+  @ApiOperation({ summary: 'Review a submission (trainer marks + feedback + status)' })
+  @ApiParam({ name: 'id', type: String, description: 'submission_id (BigInt as string)' })
+  @ApiResponse({ status: 200, description: 'Submission reviewed' })
+  @ApiResponse({ status: 404, description: 'Submission not found' })
+  reviewSubmission(
+    @Param('id') id: string,
+    @Body() dto: ReviewSubmissionDto,
+  ) {
+    return this.submissionsService.reviewSubmission(BigInt(id), dto);
   }
 
   @Post('enrollments/:enrollmentId/lectures/:lectureId/submissions')

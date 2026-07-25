@@ -9,7 +9,6 @@ export const lectureSchema = z.object({
   status:                   z.enum(lessonStatusValues),
   description:              z.string().optional(),
   estimatedDurationMinutes: z.number().int().positive().nullable().optional(),
-  dueDate:                  z.string().nullable().optional(),
   maxMarks:                 z.number().int().min(0).nullable().optional(),
 });
 

@@ -58,3 +58,14 @@ export const createSubmissionApi = (
       payload,
     )
     .then((r) => mapSubmission(r.data.data));
+
+export interface ReviewSubmissionPayload {
+  submission_status: 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
+  marks_obtained?:   number;
+  trainer_feedback?: string;
+}
+
+export const reviewSubmissionApi = (submissionId: string, payload: ReviewSubmissionPayload) =>
+  api
+    .patch<{ success: boolean; data: ApiSubmission }>(`/submissions/${submissionId}/review`, payload)
+    .then((r) => mapSubmission(r.data.data));

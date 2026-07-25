@@ -47,9 +47,23 @@ interface EnrollmentState {
   markLectureViewed:       (enrollmentId: number, lectureId: number) => Promise<void>;
   fetchSubmissionsForEnrollment: (enrollmentId: number) => Promise<LectureSubmission[]>;
   submitAssignment:        (enrollmentId: number, lectureId: number, payload: CreateSubmissionPayload) => Promise<void>;
+  resetStudentStore:       () => void;
 }
 
 type StudentState = CoursesState & AssignmentsState & EnrollmentState;
+
+const initialEnrollmentState = {
+  studentProfileId:     null,
+  enrollments:          [],
+  enrollmentsLoading:   false,
+  enrollmentsError:     null,
+  selectedCourseId:     null,
+  selectedEnrollmentId: null,
+  modulesCache:         {},
+  lecturesCache:        {},
+  progressCache:        {},
+  submissionsCache:     {},
+};
 
 export const useStudentStore = create<StudentState>((set, get) => ({
   courseSearchQuery: '',
@@ -62,16 +76,7 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   setAssignmentSearchQuery:  (query)  => set({ assignmentSearchQuery: query }),
   setAssignmentStatusFilter: (filter) => set({ assignmentStatusFilter: filter }),
 
-  studentProfileId:     null,
-  enrollments:          [],
-  enrollmentsLoading:   false,
-  enrollmentsError:     null,
-  selectedCourseId:     null,
-  selectedEnrollmentId: null,
-  modulesCache:         {},
-  lecturesCache:        {},
-  progressCache:        {},
-  submissionsCache:     {},
+  ...initialEnrollmentState,
 
   fetchEnrollments: async (userId) => {
     if (get().enrollmentsLoading) return;
@@ -155,4 +160,6 @@ export const useStudentStore = create<StudentState>((set, get) => ({
       };
     });
   },
+
+  resetStudentStore: () => set({ ...initialEnrollmentState }),
 }));

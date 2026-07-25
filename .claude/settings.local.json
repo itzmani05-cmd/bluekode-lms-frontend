@@ -1,6 +1,6 @@
 {
-  "_comment": "Local developer overrides — do NOT commit this file. Add it to .gitignore.",
   "model": "claude-sonnet-4-6",
+  "_comment": "Local developer overrides — do NOT commit this file. Add it to .gitignore.",
   "editor": {
     "preferredEditor": "vscode",
     "tabSize": 2,
@@ -11,5 +11,10 @@
     "theme": "dark",
     "showTokenCount": false,
     "compactMode": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Test-Path 'D:\\\\bluekode-lms\\\\bluekode-lms\\\\node_modules\\\\bcrypt'; Test-Path 'D:\\\\bluekode-lms\\\\bluekode-lms\\\\packages\\\\api\\\\node_modules\\\\bcrypt'\")"
+    ]
   }
 }

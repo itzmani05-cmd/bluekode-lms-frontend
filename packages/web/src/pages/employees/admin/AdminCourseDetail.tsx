@@ -145,7 +145,6 @@ const LessonModal: React.FC<{
       status:                   lesson?.status ?? 'DRAFT',
       description:              lesson?.description ?? '',
       estimatedDurationMinutes: lesson?.estimatedDurationMinutes ?? null,
-      dueDate:                  lesson?.dueDate ?? null,
       maxMarks:                 lesson?.maxMarks ?? null,
     },
   });
@@ -163,7 +162,6 @@ const LessonModal: React.FC<{
             description:              data.description,
             lectureStatus:            data.status,
             estimatedDurationMinutes: data.contentType === 'LECTURE'    ? (data.estimatedDurationMinutes ?? null) : null,
-            dueDate:                  data.contentType === 'ASSIGNMENT' ? (data.dueDate ?? null) : null,
             maxMarks:                 data.contentType === 'ASSIGNMENT' ? (data.maxMarks ?? null) : null,
           };
           await updateLesson(lesson.id, moduleId, payload);
@@ -174,7 +172,6 @@ const LessonModal: React.FC<{
             description:  data.description,
             lectureStatus: data.status,
             ...(data.contentType === 'LECTURE'    && data.estimatedDurationMinutes ? { estimatedDurationMinutes: data.estimatedDurationMinutes } : {}),
-            ...(data.contentType === 'ASSIGNMENT' && data.dueDate  ? { dueDate: data.dueDate }   : {}),
             ...(data.contentType === 'ASSIGNMENT' && data.maxMarks !== null ? { maxMarks: data.maxMarks ?? undefined } : {}),
           };
           await addLesson(moduleId, payload);
@@ -285,13 +282,9 @@ const LessonModal: React.FC<{
               </div>
             )}
 
-            {/* Conditional: ASSIGNMENT → due date + max marks */}
+            {/* Conditional: ASSIGNMENT → max marks */}
             {contentType === 'ASSIGNMENT' && (
               <>
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">Due Date <span className="text-slate-300">(optional)</span></label>
-                  <input type="date" {...register('dueDate')} className={inputCls(false)} />
-                </div>
                 <div>
                   <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">Max Marks <span className="text-slate-300">(optional)</span></label>
                   <input

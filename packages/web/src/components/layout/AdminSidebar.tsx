@@ -37,7 +37,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewCha
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    useAppStore.setState({ isAuthenticated: false, currentUser: null, successMsg: null, error: null });
+    useAppStore.getState().logout();
   };
 
   return (

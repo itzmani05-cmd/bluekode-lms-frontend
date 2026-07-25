@@ -32,3 +32,25 @@ export const updateCourseApi = (id: number, name: string, description: string, s
 
 export const deleteCourseApi = (id: number) =>
   api.delete(`/courses/${id}`).then((r) => r.data);
+
+export interface CourseDetail {
+  id:          number;
+  name:        string;
+  description: string;
+  status:      CourseStatus;
+  enrollments: number;
+}
+
+export const fetchCourseByIdApi = (id: number) =>
+  api
+    .get<{ success: boolean; data: ApiCourse }>(`/courses/${id}`)
+    .then((r) => {
+      const c = r.data.data;
+      return {
+        id:          c.course_id,
+        name:        c.course_name,
+        description: c.description ?? '',
+        status:      c.status,
+        enrollments: c._count.enrollments,
+      } satisfies CourseDetail;
+    });
