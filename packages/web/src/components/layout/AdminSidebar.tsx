@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Users, Building2, BookOpen,
   GraduationCap, Briefcase, Settings, LogOut,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, UserCheck,
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import logo from '../../assests/logo.jpeg';
@@ -15,6 +15,7 @@ export type AdminViewType =
   | 'admin-course-detail'
   | 'admin-students'
   | 'admin-employees'
+  | 'admin-trainer-assignments'
   | 'admin-settings';
 
 interface AdminSidebarProps {
@@ -23,12 +24,13 @@ interface AdminSidebarProps {
 }
 
 const navItems: { key: AdminViewType; label: string; Icon: React.ElementType }[] = [
-  { key: 'admin-dashboard',    label: 'Dashboard',    Icon: LayoutDashboard },
-  { key: 'admin-users',        label: 'Users',        Icon: Users           },
-  { key: 'admin-institutions', label: 'Institutions', Icon: Building2       },
-  { key: 'admin-courses',      label: 'Courses',      Icon: BookOpen        },
-  { key: 'admin-students',     label: 'Students',     Icon: GraduationCap   },
-  { key: 'admin-employees',    label: 'Employees',    Icon: Briefcase       },
+  { key: 'admin-dashboard',            label: 'Dashboard',          Icon: LayoutDashboard },
+  { key: 'admin-users',               label: 'Users',              Icon: Users           },
+  { key: 'admin-institutions',        label: 'Institutions',       Icon: Building2       },
+  { key: 'admin-courses',             label: 'Courses',            Icon: BookOpen        },
+  { key: 'admin-students',            label: 'Students',           Icon: GraduationCap   },
+  { key: 'admin-employees',           label: 'Employees',          Icon: Briefcase       },
+  { key: 'admin-trainer-assignments', label: 'Trainer Assignments', Icon: UserCheck      },
 ];
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onViewChange }) => {

@@ -131,12 +131,12 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
             />
           </div>
 
-          {/* Academic Year */}
+          {/* Graduating Year */}
           <div>
-            <label className={labelCls}>Academic Year</label>
+            <label className={labelCls}>Graduating Year</label>
             <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
-              <option value="">Select year...</option>
-              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+              <option value="">Select graduating year...</option>
+              {Array.from({ length: 9 }, (_, i) => new Date().getFullYear() + 4 - i).map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -242,10 +242,10 @@ const EditModal: React.FC<EditModalProps> = ({ profile, onClose }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Academic Year</label>
+              <label className={labelCls}>Graduating Year</label>
               <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
                 <option value="">Not set</option>
-                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                {Array.from({ length: 9 }, (_, i) => new Date().getFullYear() + 4 - i).map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
@@ -561,7 +561,7 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                       <th className="text-left py-3 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Student</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell">Institution</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Department</th>
-                      <th className="text-center py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Year</th>
+                      <th className="text-center py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Graduating Year</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Form Status</th>
                       <th className="py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
@@ -613,7 +613,7 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                             {p.academicYear ? (
                               <div className="flex items-center justify-center gap-1">
                                 <GraduationCap className="h-3 w-3 text-slate-400" />
-                                <span className="text-xs font-bold text-slate-700">Year {p.academicYear}</span>
+                                <span className="text-xs font-bold text-slate-700">{p.academicYear}</span>
                               </div>
                             ) : (
                               <span className="text-slate-300 text-xs">—</span>

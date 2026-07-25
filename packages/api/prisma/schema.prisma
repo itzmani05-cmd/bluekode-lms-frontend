@@ -76,6 +76,11 @@ enum EmployeeInstitutionStatus {
   INACTIVE
 }
 
+enum AssignmentType {
+  STUDENT
+  INSTITUTION
+}
+
 model Role {
   role_id     Int       @id @default(autoincrement())
   role_name   String    @unique @db.VarChar(100)
@@ -190,8 +195,9 @@ model Institution {
   createdBy            User?                 @relation("InstitutionCreatedBy", fields: [created_by], references: [user_id])
   updatedBy            User?                 @relation("InstitutionUpdatedBy", fields: [updated_by], references: [user_id])
   studentProfiles      StudentProfile[]
-  employeeInstitutions EmployeeInstitution[]
-  institutionCourses   InstitutionCourse[]
+  employeeInstitutions  EmployeeInstitution[]
+  institutionCourses    InstitutionCourse[]
+  trainerAssignments    TrainerAssignment[]   @relation("TrainerInstitutionAssignments")
 
   @@map("institutions")
 }
@@ -217,9 +223,10 @@ model EmployeeProfile {
   ledAsProjectLead     EmployeeInstitution[] @relation("ProjectLeadRelation")
   ledAsTechnicalLead   EmployeeInstitution[] @relation("TechnicalLeadRelation")
 
-  reviewedSubmissions  AssignmentSubmission[] @relation("SubmissionReviewer")
+  reviewedSubmissions      AssignmentSubmission[] @relation("SubmissionReviewer")
   originalSubstitutions    TrainerSubstitution[]  @relation("OriginalTrainer")
   replacementSubstitutions TrainerSubstitution[]  @relation("ReplacementTrainer")
+  trainerAssignments       TrainerAssignment[]    @relation("TrainerAssignments")
 
   @@map("employee_profiles")
 }
@@ -241,7 +248,8 @@ model StudentProfile {
   createdBy   User?       @relation("StudentProfileCreatedBy", fields: [created_by], references: [user_id])
   updatedBy   User?       @relation("StudentProfileUpdatedBy", fields: [updated_by], references: [user_id])
 
-  enrollments StudentCourseEnrollment[]
+  enrollments        StudentCourseEnrollment[]
+  trainerAssignments TrainerAssignment[]        @relation("TrainerStudentAssignments")
 
   @@index([institution_id])
   @@map("student_profiles")
@@ -285,9 +293,10 @@ model Course {
 
   createdBy    User?               @relation("CourseCreatedBy", fields: [created_by], references: [user_id])
   updatedBy    User?               @relation("CourseUpdatedBy", fields: [updated_by], references: [user_id])
-  modules      Module[]
-  enrollments  StudentCourseEnrollment[]
-  institutions InstitutionCourse[]
+  modules            Module[]
+  enrollments        StudentCourseEnrollment[]
+  institutions       InstitutionCourse[]
+  trainerAssignments TrainerAssignment[]
 
   @@map("courses")
 }
@@ -460,4 +469,26 @@ model TrainerSubstitution {
   replacementTrainer EmployeeProfile @relation("ReplacementTrainer", fields: [replacement_trainer_id], references: [employee_profile_id])
 
   @@map("trainer_substitutions")
+}
+
+model TrainerAssignment {
+  trainer_assignment_id       Int            @id @default(autoincrement())
+  trainer_employee_profile_id Int
+  course_id                   Int
+  assignment_type             AssignmentType
+  student_profile_id          Int?
+  institution_id              Int?
+  created_at                  DateTime?      @default(now())
+  updated_at                  DateTime?      @updatedAt
+
+  trainer        EmployeeProfile  @relation("TrainerAssignments", fields: [trainer_employee_profile_id], references: [employee_profile_id])
+  course         Course           @relation(fields: [course_id], references: [course_id])
+  studentProfile StudentProfile?  @relation("TrainerStudentAssignments", fields: [student_profile_id], references: [student_profile_id])
+  institution    Institution?     @relation("TrainerInstitutionAssignments", fields: [institution_id], references: [institution_id])
+
+  @@unique([trainer_employee_profile_id, course_id, student_profile_id], name: "unique_trainer_course_student")
+  @@unique([trainer_employee_profile_id, course_id, institution_id], name: "unique_trainer_course_institution")
+  @@index([trainer_employee_profile_id])
+  @@index([course_id])
+  @@map("trainer_assignments")
 }

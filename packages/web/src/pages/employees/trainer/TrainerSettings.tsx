@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   User, Mail, Briefcase, Award, Calendar, GraduationCap, AlertTriangle, RefreshCw,
+  Users, Building2, BookOpen,
 } from 'lucide-react';
 import { useAppStore } from '../../../store/login';
 import { fetchMyEmployeeProfile } from '../../../lib/api/employees';
+import { fetchAssignmentsByTrainerApi } from '../../../lib/api/trainerAssignments';
+import type { TrainerAssignmentSummary } from '../../../lib/api/trainerAssignments';
 import type { Employee } from '../../../store/Admin';
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
@@ -32,17 +35,22 @@ const TrainerSettings: React.FC<Props> = ({ onViewChange }) => {
   useDocumentTitle('Settings');
   const { currentUser } = useAppStore();
 
-  const [profile, setProfile]       = useState<Employee | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [profile,      setProfile]      = useState<Employee | null>(null);
+  const [assignments,  setAssignments]  = useState<TrainerAssignmentSummary[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [fetchError,   setFetchError]   = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUser?.user_id) return;
+    setLoading(true);
     fetchMyEmployeeProfile(currentUser.user_id)
-      .then(setProfile)
+      .then((emp) => {
+        setProfile(emp);
+        return fetchAssignmentsByTrainerApi(emp.id);
+      })
+      .then(setAssignments)
       .catch((err: unknown) => {
         const status = (err as { response?: { status?: number } })?.response?.status;
-        // 404 just means no profile row yet — show basic info silently
         if (status !== 404) {
           setFetchError('Could not load employee profile. Please try again later.');
         }
@@ -101,6 +109,18 @@ const TrainerSettings: React.FC<Props> = ({ onViewChange }) => {
                         <GraduationCap className="h-3 w-3" />
                         {profile?.role ?? 'Trainer'}
                       </span>
+                      {assignments.some((a) => a.assignment_type === 'STUDENT') && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          <Users className="h-3 w-3" />
+                          Student Assignment
+                        </span>
+                      )}
+                      {assignments.some((a) => a.assignment_type === 'INSTITUTION') && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-teal-50 text-teal-700 border border-teal-100">
+                          <Building2 className="h-3 w-3" />
+                          Institution Assignment
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -125,6 +145,40 @@ const TrainerSettings: React.FC<Props> = ({ onViewChange }) => {
                   <InfoRow icon={<GraduationCap className="h-4 w-4" />} label="Years of Experience" value={profile?.yearsOfExperience || null} />
                   <InfoRow icon={<Calendar className="h-4 w-4" />}      label="Joining Date"      value={profile?.joiningDate !== '—' ? profile?.joiningDate : null} />
                 </div>
+
+                {/* Assignments card */}
+                {assignments.length > 0 && (
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-900/5 p-6">
+                    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">My Assignments</h3>
+                    <div className="space-y-2">
+                      {assignments.map((a) => {
+                        const isStudent = a.assignment_type === 'STUDENT';
+                        const target = isStudent
+                          ? `${a.studentProfile?.user.full_name ?? ''} ${a.studentProfile?.user.last_name ?? ''}`.trim()
+                          : a.institution?.institution_name ?? '—';
+                        return (
+                          <div key={a.trainer_assignment_id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                            <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border shrink-0
+                              ${isStudent ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-teal-50 text-teal-700 border-teal-100'}`}>
+                              {isStudent ? <Users className="h-2.5 w-2.5" /> : <Building2 className="h-2.5 w-2.5" />}
+                              {isStudent ? 'Student' : 'Institution'}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-slate-800 truncate">{target}</p>
+                              {a.studentProfile?.institution && (
+                                <p className="text-[10px] text-slate-400 font-semibold">{a.studentProfile.institution.institution_name}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold shrink-0">
+                              <BookOpen className="h-3 w-3" />
+                              {a.course.course_name}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Account card */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-900/5 p-6">

@@ -34,6 +34,16 @@ import type { AdminStudentProfile, FormStatus as StudentFormStatus } from '../li
 import {
   fetchModulesApi, createModuleApi, updateModuleApi, deleteModuleApi,
 } from '../lib/api/modules';
+import {
+  fetchTrainerAssignmentsApi,
+  createTrainerAssignmentApi,
+  deleteTrainerAssignmentApi,
+} from '../lib/api/trainerAssignments';
+import type {
+  TrainerAssignmentSummary,
+  AssignmentType as TrainerAssignmentType,
+  CreateTrainerAssignmentPayload,
+} from '../lib/api/trainerAssignments';
 import type { CourseModule } from '../lib/api/modules';
 import {
   fetchLecturesApi, createLectureApi, updateLectureApi, deleteLectureApi,
@@ -41,6 +51,7 @@ import {
 import type { Lesson, CreateLessonPayload, UpdateLessonPayload } from '../lib/api/lectures';
 
 export type { AdminStudentProfile, StudentFormStatus };
+export type { TrainerAssignmentSummary, TrainerAssignmentType, CreateTrainerAssignmentPayload };
 
 //Shared types
 
@@ -193,6 +204,16 @@ type AdminState = {
 
   // Enrollment actions
   assignCourseToStudent: (studentProfileId: number, courseId: number) => Promise<void>;
+
+  // Trainer assignment state + actions
+  trainerAssignments:           TrainerAssignmentSummary[];
+  trainerAssignmentSearchQuery: string;
+  trainerAssignmentTypeFilter:  string;
+  setTrainerAssignmentSearchQuery: (q: string) => void;
+  setTrainerAssignmentTypeFilter:  (f: string) => void;
+  fetchTrainerAssignments:      () => Promise<void>;
+  createTrainerAssignment:      (payload: CreateTrainerAssignmentPayload) => Promise<void>;
+  deleteTrainerAssignment:      (id: number) => Promise<void>;
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -223,6 +244,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   modules:          [],
   lessons:          {},
   modulesLoading:   false,
+  trainerAssignments:           [],
+  trainerAssignmentSearchQuery: '',
+  trainerAssignmentTypeFilter:  'all',
 
   // Filter setters
   setUserSearchQuery:         (userSearchQuery)         => set({ userSearchQuery }),
@@ -235,6 +259,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setStudentEnrollmentFilter: (studentEnrollmentFilter) => set({ studentEnrollmentFilter }),
   setEmployeeSearchQuery:     (employeeSearchQuery)     => set({ employeeSearchQuery }),
   setEmployeeStatusFilter:    (employeeStatusFilter)    => set({ employeeStatusFilter }),
+  setTrainerAssignmentSearchQuery: (trainerAssignmentSearchQuery) => set({ trainerAssignmentSearchQuery }),
+  setTrainerAssignmentTypeFilter:  (trainerAssignmentTypeFilter)  => set({ trainerAssignmentTypeFilter }),
 
   // ── Fetch actions ────────────────────────────────────────────────────────────
 
@@ -485,6 +511,37 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       set({ error: msg });
       throw new Error(msg);
     }
+  },
+
+  fetchTrainerAssignments: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const trainerAssignments = await fetchTrainerAssignmentsApi();
+      set({ trainerAssignments, isLoading: false });
+    } catch {
+      set({ error: 'Failed to load trainer assignments.', isLoading: false });
+    }
+  },
+
+  createTrainerAssignment: async (payload) => {
+    try {
+      const assignment = await createTrainerAssignmentApi(payload);
+      set((s) => ({ trainerAssignments: [assignment, ...s.trainerAssignments], error: null }));
+    } catch (e) {
+      const msg =
+        (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to create trainer assignment.';
+      set({ error: msg });
+      throw new Error(msg);
+    }
+  },
+
+  deleteTrainerAssignment: async (id) => {
+    await deleteTrainerAssignmentApi(id);
+    set((s) => ({
+      trainerAssignments: s.trainerAssignments.filter((a) => a.trainer_assignment_id !== id),
+      error: null,
+    }));
   },
 
   updateUserStatus: async (id, status) => {

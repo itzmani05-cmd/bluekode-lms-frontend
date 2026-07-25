@@ -67,7 +67,7 @@ const StudentSettings: React.FC<Props> = ({ onViewChange }) => {
 
   const initials = fullName.slice(0, 2).toUpperCase() || '??';
 
-  const academicYearLabel = profile?.academic_year ? `Year ${profile.academic_year}` : null;
+  const academicYearLabel = profile?.academic_year ? String(profile.academic_year) : null;
 
   const joinedDate = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -163,7 +163,7 @@ const StudentSettings: React.FC<Props> = ({ onViewChange }) => {
                   />
                   <InfoRow
                     icon={<GraduationCap className="h-4 w-4" />}
-                    label="Academic Year"
+                    label="Graduating Year"
                     value={academicYearLabel}
                   />
                 </div>

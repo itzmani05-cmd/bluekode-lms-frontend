@@ -263,16 +263,16 @@ const CompleteProfile: React.FC = () => {
                       value={fields.department ?? ''} disabled={isLoading} onChange={setField} />
 
                     <div>
-                      <label className={labelCls}>Academic Year</label>
+                      <label className={labelCls}>Graduating Year</label>
                       <select
                         value={fields.academicYear ?? ''}
                         disabled={isLoading}
                         onChange={(e) => setField('academicYear', e.target.value)}
                         className={inputCls()}
                       >
-                        <option value="">Select year...</option>
-                        {[1, 2, 3, 4, 5].map((y) => (
-                          <option key={y} value={y}>Year {y}</option>
+                        <option value="">Select graduating year...</option>
+                        {Array.from({ length: 9 }, (_, i) => new Date().getFullYear() + 4 - i).map((y) => (
+                          <option key={y} value={y}>{y}</option>
                         ))}
                       </select>
                     </div>

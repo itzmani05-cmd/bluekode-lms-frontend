@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, HelpCircle, Menu, X, LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Briefcase, Settings, Info } from 'lucide-react';
+import { Bell, HelpCircle, Menu, X, LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Briefcase, Settings, Info, UserCheck } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import type { AdminViewType } from './AdminSidebar';
 import logo from '../../assests/logo.jpeg';
@@ -15,9 +15,10 @@ const navItems: { key: AdminViewType; label: string; Icon: React.ElementType }[]
   { key: 'admin-users',        label: 'Users',        Icon: Users           },
   { key: 'admin-institutions', label: 'Institutions', Icon: Building2       },
   { key: 'admin-courses',      label: 'Courses',      Icon: BookOpen        },
-  { key: 'admin-students',     label: 'Students',     Icon: GraduationCap   },
-  { key: 'admin-employees',    label: 'Employees',    Icon: Briefcase       },
-  { key: 'admin-settings',     label: 'Settings',     Icon: Settings        },
+  { key: 'admin-students',            label: 'Students',          Icon: GraduationCap },
+  { key: 'admin-employees',           label: 'Employees',         Icon: Briefcase     },
+  { key: 'admin-trainer-assignments', label: 'Trainer Assignments', Icon: UserCheck   },
+  { key: 'admin-settings',            label: 'Settings',          Icon: Settings      },
 ];
 
 const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
@@ -52,21 +53,17 @@ const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
         <img src={logo} alt="Bluekode LMS" className="h-8 w-auto" />
       </div>
 
-      {/* ── Right: Desktop ── */}
+      {/* Right: Desktop */}
       <div className="hidden sm:flex items-center gap-4">
         <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white" />
         </button>
-        <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-          <HelpCircle className="h-5 w-5" />
-        </button>
         <button
           onClick={() => setLearnMoreOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 pr-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
         >
-          <Info className="h-4 w-4" />
-          Learn More
+          <Info className="h-5 w-5" />
         </button>
         <div className="h-8 w-px bg-slate-200" />
         <div className="flex items-center gap-2">

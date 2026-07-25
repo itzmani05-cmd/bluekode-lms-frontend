@@ -16,6 +16,7 @@ import { ModulesModule } from './modules/modules.module';
 import { LecturesModule } from './lectures/lectures.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
 import { AssignmentSubmissionsModule } from './assignment-submissions/assignment-submissions.module';
+import { TrainerAssignmentsModule } from './trainer-assignments/trainer-assignments.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AssignmentSubmissionsModule } from './assignment-submissions/assignment
     LecturesModule,
     StudentProgressModule,
     AssignmentSubmissionsModule,
+    TrainerAssignmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

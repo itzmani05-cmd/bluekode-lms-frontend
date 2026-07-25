@@ -15,7 +15,8 @@ import AdminCourses from './pages/employees/admin/AdminCourses';
 import AdminStudents from './pages/employees/admin/AdminStudents';
 import AdminEmployees    from './pages/employees/admin/AdminEmployees';
 import AdminCourseDetail from './pages/employees/admin/AdminCourseDetail';
-import AdminSettings     from './pages/employees/admin/AdminSettings';
+import AdminSettings            from './pages/employees/admin/AdminSettings';
+import AdminTrainerAssignments  from './pages/employees/admin/AdminTrainerAssignments';
 import TrainerDashboard   from './pages/employees/trainer/TrainerDashboard';
 import TrainerSubmissions from './pages/employees/trainer/TrainerSubmissions';
 import TrainerStudents    from './pages/employees/trainer/TrainerStudents';
@@ -51,9 +52,10 @@ function App() {
       if (adminView === 'admin-institutions') return <AdminInstitutions onViewChange={setAdminView} />;
       if (adminView === 'admin-courses')      return <AdminCourses      onViewChange={setAdminView} />;
       if (adminView === 'admin-students')     return <AdminStudents     onViewChange={setAdminView} />;
-      if (adminView === 'admin-employees')    return <AdminEmployees    onViewChange={setAdminView} />;
-      if (adminView === 'admin-course-detail') return <AdminCourseDetail onViewChange={setAdminView} />;
-      if (adminView === 'admin-settings')     return <AdminSettings     onViewChange={setAdminView} />;
+      if (adminView === 'admin-employees')           return <AdminEmployees           onViewChange={setAdminView} />;
+      if (adminView === 'admin-course-detail')       return <AdminCourseDetail        onViewChange={setAdminView} />;
+      if (adminView === 'admin-trainer-assignments') return <AdminTrainerAssignments  onViewChange={setAdminView} />;
+      if (adminView === 'admin-settings')            return <AdminSettings            onViewChange={setAdminView} />;
       return <AdminDashboard onViewChange={setAdminView} />;
     }
 
