@@ -28,14 +28,21 @@ import type { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 @ApiBearerAuth()
 @Controller()
 export class StudentCourseEnrollmentsController {
-  constructor(private readonly enrollmentsService: StudentCourseEnrollmentsService) {}
+  constructor(
+    private readonly enrollmentsService: StudentCourseEnrollmentsService,
+  ) {}
 
   @Post('student-profiles/:studentProfileId/enrollments')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Enroll a student profile in a course (Admin only)' })
+  @ApiOperation({
+    summary: 'Enroll a student profile in a course (Admin only)',
+  })
   @ApiParam({ name: 'studentProfileId', type: Number })
   @ApiResponse({ status: 201, description: 'Enrollment created successfully' })
-  @ApiResponse({ status: 404, description: 'Student profile or course not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Student profile or course not found',
+  })
   @ApiResponse({ status: 409, description: 'Already enrolled in this course' })
   create(
     @Param('studentProfileId', ParseIntPipe) studentProfileId: number,
@@ -72,7 +79,10 @@ export class StudentCourseEnrollmentsController {
   @Get('enrollments/:id')
   @ApiOperation({ summary: 'Get an enrollment by ID' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Enrollment retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Enrollment retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Enrollment not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.enrollmentsService.findOne(id);
@@ -80,7 +90,9 @@ export class StudentCourseEnrollmentsController {
 
   @Patch('enrollments/:id')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Update an enrollment — status, progress, dates (Admin only)' })
+  @ApiOperation({
+    summary: 'Update an enrollment — status, progress, dates (Admin only)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Enrollment updated successfully' })
   @ApiResponse({ status: 404, description: 'Enrollment not found' })
@@ -98,7 +110,10 @@ export class StudentCourseEnrollmentsController {
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Enrollment deleted successfully' })
   @ApiResponse({ status: 404, description: 'Enrollment not found' })
-  @ApiResponse({ status: 409, description: 'Enrollment has existing progress or submissions' })
+  @ApiResponse({
+    status: 409,
+    description: 'Enrollment has existing progress or submissions',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.enrollmentsService.remove(id);
   }

@@ -19,10 +19,13 @@ const mockAssignment = {
   updated_at: new Date(),
 };
 
-const uniqueViolation = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-  code: 'P2002',
-  clientVersion: '7.0.0',
-});
+const uniqueViolation = new Prisma.PrismaClientKnownRequestError(
+  'Unique constraint failed',
+  {
+    code: 'P2002',
+    clientVersion: '7.0.0',
+  },
+);
 
 const mockPrisma = {
   institution: { findFirst: jest.fn() },
@@ -43,10 +46,15 @@ describe('EmployeeInstitutionsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EmployeeInstitutionsService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        EmployeeInstitutionsService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
-    service = module.get<EmployeeInstitutionsService>(EmployeeInstitutionsService);
+    service = module.get<EmployeeInstitutionsService>(
+      EmployeeInstitutionsService,
+    );
     jest.clearAllMocks();
   });
 
@@ -55,10 +63,12 @@ describe('EmployeeInstitutionsService', () => {
 
     it('creates and returns an assignment', async () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
-      mockPrisma.employeeProfile.findFirst.mockResolvedValue(mockEmployeeProfile);
+      mockPrisma.employeeProfile.findFirst.mockResolvedValue(
+        mockEmployeeProfile,
+      );
       mockPrisma.employeeInstitution.create.mockResolvedValue(mockAssignment);
 
-      const result = await service.create(1, dto as any, 1);
+      const result = await service.create(1, dto, 1);
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockAssignment);
@@ -66,21 +76,29 @@ describe('EmployeeInstitutionsService', () => {
 
     it('throws NotFoundException when the institution does not exist', async () => {
       mockPrisma.institution.findFirst.mockResolvedValue(null);
-      await expect(service.create(1, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(1, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws NotFoundException when the employee profile does not exist', async () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
       mockPrisma.employeeProfile.findFirst.mockResolvedValue(null);
-      await expect(service.create(1, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(1, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws ConflictException when already assigned', async () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
-      mockPrisma.employeeProfile.findFirst.mockResolvedValue(mockEmployeeProfile);
+      mockPrisma.employeeProfile.findFirst.mockResolvedValue(
+        mockEmployeeProfile,
+      );
       mockPrisma.employeeInstitution.create.mockRejectedValue(uniqueViolation);
 
-      await expect(service.create(1, dto as any, 1)).rejects.toThrow(ConflictException);
+      await expect(service.create(1, dto as any, 1)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('validates projectLeadEmployeeId when provided', async () => {
@@ -90,7 +108,11 @@ describe('EmployeeInstitutionsService', () => {
         .mockResolvedValueOnce(null);
 
       await expect(
-        service.create(1, { employeeProfileId: 1, projectLeadEmployeeId: 99 } as any, 1),
+        service.create(
+          1,
+          { employeeProfileId: 1, projectLeadEmployeeId: 99 } as any,
+          1,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -100,7 +122,10 @@ describe('EmployeeInstitutionsService', () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
       mockPrisma.$transaction.mockResolvedValue([[mockAssignment], 1]);
 
-      const result = await service.findAllForInstitution(1, { page: 1, limit: 20 });
+      const result = await service.findAllForInstitution(1, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -109,10 +134,15 @@ describe('EmployeeInstitutionsService', () => {
 
   describe('findAllForEmployee', () => {
     it('returns paginated assignments', async () => {
-      mockPrisma.employeeProfile.findFirst.mockResolvedValue(mockEmployeeProfile);
+      mockPrisma.employeeProfile.findFirst.mockResolvedValue(
+        mockEmployeeProfile,
+      );
       mockPrisma.$transaction.mockResolvedValue([[mockAssignment], 1]);
 
-      const result = await service.findAllForEmployee(1, { page: 1, limit: 20 });
+      const result = await service.findAllForEmployee(1, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -121,7 +151,9 @@ describe('EmployeeInstitutionsService', () => {
 
   describe('findOne', () => {
     it('returns an assignment when found', async () => {
-      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(mockAssignment);
+      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(
+        mockAssignment,
+      );
       const result = await service.findOne(1);
       expect(result.success).toBe(true);
     });
@@ -134,7 +166,9 @@ describe('EmployeeInstitutionsService', () => {
 
   describe('update', () => {
     it('updates and returns the assignment', async () => {
-      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(mockAssignment);
+      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(
+        mockAssignment,
+      );
       mockPrisma.employeeInstitution.update.mockResolvedValue({
         ...mockAssignment,
         status: EmployeeInstitutionStatus.INACTIVE,
@@ -148,13 +182,17 @@ describe('EmployeeInstitutionsService', () => {
 
     it('throws NotFoundException when the assignment does not exist', async () => {
       mockPrisma.employeeInstitution.findFirst.mockResolvedValue(null);
-      await expect(service.update(999, {} as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, {} as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
     it('deletes the assignment', async () => {
-      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(mockAssignment);
+      mockPrisma.employeeInstitution.findFirst.mockResolvedValue(
+        mockAssignment,
+      );
       mockPrisma.employeeInstitution.delete.mockResolvedValue({});
 
       const result = await service.remove(1);

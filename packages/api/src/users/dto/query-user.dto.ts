@@ -17,7 +17,10 @@ export class QueryUserDto {
   @Min(1)
   limit?: number;
 
-  @ApiPropertyOptional({ example: 'Manikandan', description: 'Search by name or email' })
+  @ApiPropertyOptional({
+    example: 'Manikandan',
+    description: 'Search by name or email',
+  })
   @IsOptional()
   @IsString()
   search?: string;
@@ -32,7 +35,10 @@ export class QueryUserDto {
   @IsString()
   institutionId?: string;
 
-  @ApiPropertyOptional({ example: 'ACTIVE', description: 'User account status' })
+  @ApiPropertyOptional({
+    example: 'ACTIVE',
+    description: 'User account status',
+  })
   @IsOptional()
   @IsString()
   status?: string;

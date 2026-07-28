@@ -22,7 +22,9 @@ describe('EmployeeProfilesController', () => {
       providers: [{ provide: EmployeeProfilesService, useValue: mockService }],
     }).compile();
 
-    controller = module.get<EmployeeProfilesController>(EmployeeProfilesController);
+    controller = module.get<EmployeeProfilesController>(
+      EmployeeProfilesController,
+    );
     jest.clearAllMocks();
   });
 
@@ -44,7 +46,11 @@ describe('EmployeeProfilesController', () => {
   });
 
   it('findAll — delegates to service with query', async () => {
-    mockService.findAll.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAll.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAll({ page: 1, limit: 10 });
     expect(mockService.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
   });
@@ -58,7 +64,11 @@ describe('EmployeeProfilesController', () => {
   it('update — passes id, dto, and admin id to service', async () => {
     mockService.update.mockResolvedValue({ success: true, data: {} });
     await controller.update(1, { isActive: false }, mockUser);
-    expect(mockService.update).toHaveBeenCalledWith(1, { isActive: false }, mockUser.sub);
+    expect(mockService.update).toHaveBeenCalledWith(
+      1,
+      { isActive: false },
+      mockUser.sub,
+    );
   });
 
   it('remove — passes id to service', async () => {

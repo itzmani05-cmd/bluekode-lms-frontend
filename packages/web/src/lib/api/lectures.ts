@@ -7,6 +7,7 @@ interface ApiLecture {
   content_type:               ContentType;
   title:                      string;
   description:                string | null;
+  content:                    string | null;
   display_order:              number;
   lecture_status:             LessonStatus;
   pdf_url:                    string | null;
@@ -23,6 +24,7 @@ export interface Lesson {
   contentType:              ContentType;
   title:                    string;
   description:              string;
+  content:                  string;
   displayOrder:             number;
   status:                   LessonStatus;
   pdfUrl:                   string | null;
@@ -38,6 +40,7 @@ const mapLecture = (l: ApiLecture): Lesson => ({
   contentType:              l.content_type,
   title:                    l.title,
   description:              l.description ?? '',
+  content:                  l.content ?? '',
   displayOrder:             l.display_order,
   status:                   l.lecture_status,
   pdfUrl:                   l.pdf_url,
@@ -51,7 +54,9 @@ export interface CreateLessonPayload {
   contentType:              ContentType;
   title:                    string;
   description?:             string;
+  content?:                 string;
   lectureStatus:            LessonStatus;
+  pdfUrl?:                  string;
   estimatedDurationMinutes?: number;
   dueDate?:                 string;
   maxMarks?:                number;
@@ -61,7 +66,9 @@ export interface UpdateLessonPayload {
   contentType?:              ContentType;
   title?:                    string;
   description?:              string;
+  content?:                  string;
   lectureStatus?:            LessonStatus;
+  pdfUrl?:                   string | null;
   estimatedDurationMinutes?: number | null;
   dueDate?:                  string | null;
   maxMarks?:                 number | null;

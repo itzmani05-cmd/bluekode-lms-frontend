@@ -61,7 +61,7 @@ const AdminHeader = ({ activeTab, onViewChange }: AdminHeaderProps) => {
         </button>
         <button
           onClick={() => setLearnMoreOpen(true)}
-          className="flex items-center gap-1.5 pr-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+          className="flex items-center gap-1 py-1.5 text-xs font-bold text-slate-400 hover:bg-emerald-50 rounded-lg transition-colors"
         >
           <Info className="h-5 w-5" />
         </button>

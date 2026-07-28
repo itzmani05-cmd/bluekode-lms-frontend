@@ -1,4 +1,11 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ReviewSubmissionDto {
   @IsEnum(['UNDER_REVIEW', 'REVIEWED', 'RESUBMISSION_REQUIRED'])

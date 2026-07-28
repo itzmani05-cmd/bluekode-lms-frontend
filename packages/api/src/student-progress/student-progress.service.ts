@@ -42,9 +42,14 @@ const PROGRESS_SELECT = {
   last_accessed: true,
 } satisfies Prisma.StudentProgressSelect;
 
-type RawProgress = Prisma.StudentProgressGetPayload<{ select: typeof PROGRESS_SELECT }>;
+type RawProgress = Prisma.StudentProgressGetPayload<{
+  select: typeof PROGRESS_SELECT;
+}>;
 
-const mapProgress = (p: RawProgress) => ({ ...p, progress_id: p.progress_id.toString() });
+const mapProgress = (p: RawProgress) => ({
+  ...p,
+  progress_id: p.progress_id.toString(),
+});
 
 @Injectable()
 export class StudentProgressService {
@@ -138,7 +143,10 @@ export class StudentProgressService {
 
     return {
       success: true,
-      data: { progress: mapProgress(rawProgress), enrollment: updatedEnrollment },
+      data: {
+        progress: mapProgress(rawProgress),
+        enrollment: updatedEnrollment,
+      },
     };
   }
 }

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EnrollmentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -19,7 +23,14 @@ const ENROLLMENT_SELECT = {
   studentProfile: {
     select: {
       student_profile_id: true,
-      user: { select: { user_id: true, full_name: true, last_name: true, email: true } },
+      user: {
+        select: {
+          user_id: true,
+          full_name: true,
+          last_name: true,
+          email: true,
+        },
+      },
     },
   },
 } satisfies Prisma.StudentCourseEnrollmentSelect;
@@ -42,7 +53,11 @@ export class StudentCourseEnrollmentsService {
     if (!course) throw new NotFoundException('Course not found');
   }
 
-  async create(studentProfileId: number, dto: CreateEnrollmentDto, adminUserId: number) {
+  async create(
+    studentProfileId: number,
+    dto: CreateEnrollmentDto,
+    adminUserId: number,
+  ) {
     await this.ensureStudentProfileExists(studentProfileId);
     await this.ensureCourseExists(dto.courseId);
 
@@ -51,16 +66,25 @@ export class StudentCourseEnrollmentsService {
         data: {
           student_profile_id: studentProfileId,
           course_id: dto.courseId,
-          enrollment_status: (dto.enrollmentStatus as EnrollmentStatus) ?? EnrollmentStatus.ASSIGNED,
-          assigned_date: dto.assignedDate ? new Date(dto.assignedDate) : new Date(),
+          enrollment_status:
+            (dto.enrollmentStatus as EnrollmentStatus) ??
+            EnrollmentStatus.ASSIGNED,
+          assigned_date: dto.assignedDate
+            ? new Date(dto.assignedDate)
+            : new Date(),
           created_by: adminUserId,
         },
         select: ENROLLMENT_SELECT,
       });
       return { success: true, data: enrollment };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('This student profile is already enrolled in this course');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This student profile is already enrolled in this course',
+        );
       }
       throw e;
     }
@@ -84,7 +108,9 @@ export class StudentCourseEnrollmentsService {
 
     const where: Prisma.StudentCourseEnrollmentWhereInput = {
       ...baseWhere,
-      ...(enrollmentStatus && { enrollment_status: enrollmentStatus as EnrollmentStatus }),
+      ...(enrollmentStatus && {
+        enrollment_status: enrollmentStatus,
+      }),
     };
 
     const [data, total] = await this.prisma.$transaction([
@@ -122,11 +148,14 @@ export class StudentCourseEnrollmentsService {
       updated_by: adminUserId,
     };
     if (dto.enrollmentStatus !== undefined) {
-      data.enrollment_status = dto.enrollmentStatus as EnrollmentStatus;
+      data.enrollment_status = dto.enrollmentStatus;
     }
-    if (dto.completionPercentage !== undefined) data.completion_percentage = dto.completionPercentage;
-    if (dto.assignedDate !== undefined) data.assigned_date = new Date(dto.assignedDate);
-    if (dto.completedDate !== undefined) data.completed_date = new Date(dto.completedDate);
+    if (dto.completionPercentage !== undefined)
+      data.completion_percentage = dto.completionPercentage;
+    if (dto.assignedDate !== undefined)
+      data.assigned_date = new Date(dto.assignedDate);
+    if (dto.completedDate !== undefined)
+      data.completed_date = new Date(dto.completedDate);
 
     const enrollment = await this.prisma.studentCourseEnrollment.update({
       where: { enrollment_id: id },
@@ -141,9 +170,14 @@ export class StudentCourseEnrollmentsService {
     await this.findOne(id);
 
     try {
-      await this.prisma.studentCourseEnrollment.delete({ where: { enrollment_id: id } });
+      await this.prisma.studentCourseEnrollment.delete({
+        where: { enrollment_id: id },
+      });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2003'
+      ) {
         throw new ConflictException(
           'Cannot delete an enrollment with existing progress or assignment submissions',
         );

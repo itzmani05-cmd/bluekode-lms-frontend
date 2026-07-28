@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const contentTypeValues  = ['LECTURE', 'ASSIGNMENT'] as const;
+export const contentTypeValues  = ['LECTURE', 'TASK', 'ASSIGNMENT'] as const;
 export const lessonStatusValues = ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const;
 
 export const lectureSchema = z.object({
@@ -8,7 +8,10 @@ export const lectureSchema = z.object({
   contentType:              z.enum(contentTypeValues),
   status:                   z.enum(lessonStatusValues),
   description:              z.string().optional(),
+  content:                  z.string().optional(),
+  pdfUrl:                   z.string().optional().nullable(),
   estimatedDurationMinutes: z.number().int().positive().nullable().optional(),
+  dueDate:                  z.string().optional().nullable(),
   maxMarks:                 z.number().int().min(0).nullable().optional(),
 });
 

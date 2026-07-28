@@ -25,10 +25,10 @@ export const fetchCourses = () =>
     .then((r) => r.data.data.map(mapCourse));
 
 export const createCourseApi = (name: string, description: string, status: CourseStatus) =>
-  api.post('/courses', { name, description, status }).then((r) => r.data);
+  api.post<{ data: ApiCourse }>('/courses', { name, description, status }).then((r) => mapCourse(r.data.data));
 
 export const updateCourseApi = (id: number, name: string, description: string, status: CourseStatus) =>
-  api.patch(`/courses/${id}`, { name, description, status }).then((r) => r.data);
+  api.patch<{ data: ApiCourse }>(`/courses/${id}`, { name, description, status }).then((r) => mapCourse(r.data.data));
 
 export const deleteCourseApi = (id: number) =>
   api.delete(`/courses/${id}`).then((r) => r.data);

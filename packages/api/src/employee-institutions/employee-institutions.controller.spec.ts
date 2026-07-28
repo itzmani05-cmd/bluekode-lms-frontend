@@ -19,10 +19,14 @@ describe('EmployeeInstitutionsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EmployeeInstitutionsController],
-      providers: [{ provide: EmployeeInstitutionsService, useValue: mockService }],
+      providers: [
+        { provide: EmployeeInstitutionsService, useValue: mockService },
+      ],
     }).compile();
 
-    controller = module.get<EmployeeInstitutionsController>(EmployeeInstitutionsController);
+    controller = module.get<EmployeeInstitutionsController>(
+      EmployeeInstitutionsController,
+    );
     jest.clearAllMocks();
   });
 
@@ -38,15 +42,29 @@ describe('EmployeeInstitutionsController', () => {
   });
 
   it('findAllForInstitution — passes institutionId and query to service', async () => {
-    mockService.findAllForInstitution.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForInstitution.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForInstitution(1, { page: 1, limit: 10 });
-    expect(mockService.findAllForInstitution).toHaveBeenCalledWith(1, { page: 1, limit: 10 });
+    expect(mockService.findAllForInstitution).toHaveBeenCalledWith(1, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findAllForEmployee — passes employeeProfileId and query to service', async () => {
-    mockService.findAllForEmployee.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForEmployee.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForEmployee(1, { page: 1, limit: 10 });
-    expect(mockService.findAllForEmployee).toHaveBeenCalledWith(1, { page: 1, limit: 10 });
+    expect(mockService.findAllForEmployee).toHaveBeenCalledWith(1, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findOne — passes parsed int id to service', async () => {
@@ -58,7 +76,11 @@ describe('EmployeeInstitutionsController', () => {
   it('update — passes id, dto, and admin id to service', async () => {
     mockService.update.mockResolvedValue({ success: true, data: {} });
     await controller.update(1, { status: 'INACTIVE' } as any, mockUser);
-    expect(mockService.update).toHaveBeenCalledWith(1, { status: 'INACTIVE' }, mockUser.sub);
+    expect(mockService.update).toHaveBeenCalledWith(
+      1,
+      { status: 'INACTIVE' },
+      mockUser.sub,
+    );
   });
 
   it('remove — passes id to service', async () => {

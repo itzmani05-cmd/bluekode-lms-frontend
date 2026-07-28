@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EmployeeInstitutionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEmployeeInstitutionDto } from './dto/create-employee-institution.dto';
@@ -42,7 +46,11 @@ export class EmployeeInstitutionsService {
     if (!profile) throw new NotFoundException('Employee profile not found');
   }
 
-  async create(institutionId: number, dto: CreateEmployeeInstitutionDto, adminUserId: number) {
+  async create(
+    institutionId: number,
+    dto: CreateEmployeeInstitutionDto,
+    adminUserId: number,
+  ) {
     await this.ensureInstitutionExists(institutionId);
     await this.ensureEmployeeProfileExists(dto.employeeProfileId);
     if (dto.projectLeadEmployeeId !== undefined) {
@@ -59,27 +67,42 @@ export class EmployeeInstitutionsService {
           employee_profile_id: dto.employeeProfileId,
           project_lead_employee_id: dto.projectLeadEmployeeId,
           technical_lead_employee_id: dto.technicalLeadEmployeeId,
-          assigned_date: dto.assignedDate ? new Date(dto.assignedDate) : new Date(),
-          status: (dto.status as EmployeeInstitutionStatus) ?? EmployeeInstitutionStatus.ACTIVE,
+          assigned_date: dto.assignedDate
+            ? new Date(dto.assignedDate)
+            : new Date(),
+          status:
+            (dto.status as EmployeeInstitutionStatus) ??
+            EmployeeInstitutionStatus.ACTIVE,
           created_by: adminUserId,
         },
         select: EMPLOYEE_INSTITUTION_SELECT,
       });
       return { success: true, data: assignment };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('This employee is already assigned to this institution');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This employee is already assigned to this institution',
+        );
       }
       throw e;
     }
   }
 
-  async findAllForInstitution(institutionId: number, dto: QueryEmployeeInstitutionDto) {
+  async findAllForInstitution(
+    institutionId: number,
+    dto: QueryEmployeeInstitutionDto,
+  ) {
     await this.ensureInstitutionExists(institutionId);
     return this.paginate({ institution_id: institutionId }, dto);
   }
 
-  async findAllForEmployee(employeeProfileId: number, dto: QueryEmployeeInstitutionDto) {
+  async findAllForEmployee(
+    employeeProfileId: number,
+    dto: QueryEmployeeInstitutionDto,
+  ) {
     await this.ensureEmployeeProfileExists(employeeProfileId);
     return this.paginate({ employee_profile_id: employeeProfileId }, dto);
   }
@@ -92,7 +115,7 @@ export class EmployeeInstitutionsService {
 
     const where: Prisma.EmployeeInstitutionWhereInput = {
       ...baseWhere,
-      ...(status && { status: status as EmployeeInstitutionStatus }),
+      ...(status && { status: status }),
     };
 
     const [data, total] = await this.prisma.$transaction([
@@ -119,11 +142,16 @@ export class EmployeeInstitutionsService {
       select: EMPLOYEE_INSTITUTION_SELECT,
     });
 
-    if (!assignment) throw new NotFoundException('Employee institution assignment not found');
+    if (!assignment)
+      throw new NotFoundException('Employee institution assignment not found');
     return { success: true, data: assignment };
   }
 
-  async update(id: number, dto: UpdateEmployeeInstitutionDto, adminUserId: number) {
+  async update(
+    id: number,
+    dto: UpdateEmployeeInstitutionDto,
+    adminUserId: number,
+  ) {
     await this.findOne(id);
 
     if (dto.projectLeadEmployeeId !== undefined) {
@@ -133,15 +161,18 @@ export class EmployeeInstitutionsService {
       await this.ensureEmployeeProfileExists(dto.technicalLeadEmployeeId);
     }
 
-    const data: Prisma.EmployeeInstitutionUncheckedUpdateInput = { updated_by: adminUserId };
+    const data: Prisma.EmployeeInstitutionUncheckedUpdateInput = {
+      updated_by: adminUserId,
+    };
     if (dto.projectLeadEmployeeId !== undefined) {
       data.project_lead_employee_id = dto.projectLeadEmployeeId;
     }
     if (dto.technicalLeadEmployeeId !== undefined) {
       data.technical_lead_employee_id = dto.technicalLeadEmployeeId;
     }
-    if (dto.assignedDate !== undefined) data.assigned_date = new Date(dto.assignedDate);
-    if (dto.status !== undefined) data.status = dto.status as EmployeeInstitutionStatus;
+    if (dto.assignedDate !== undefined)
+      data.assigned_date = new Date(dto.assignedDate);
+    if (dto.status !== undefined) data.status = dto.status;
 
     const assignment = await this.prisma.employeeInstitution.update({
       where: { employee_institution_id: id },
@@ -155,8 +186,13 @@ export class EmployeeInstitutionsService {
   async remove(id: number) {
     await this.findOne(id);
 
-    await this.prisma.employeeInstitution.delete({ where: { employee_institution_id: id } });
+    await this.prisma.employeeInstitution.delete({
+      where: { employee_institution_id: id },
+    });
 
-    return { success: true, message: 'Employee institution assignment deleted successfully' };
+    return {
+      success: true,
+      message: 'Employee institution assignment deleted successfully',
+    };
   }
 }

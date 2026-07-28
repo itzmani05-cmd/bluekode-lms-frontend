@@ -5,12 +5,12 @@ import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 
 const MODULE_SELECT = {
-  module_id:          true,
-  course_id:          true,
-  module_name:        true,
+  module_id: true,
+  course_id: true,
+  module_name: true,
   module_description: true,
-  module_order:       true,
-  created_at:         true,
+  module_order: true,
+  created_at: true,
   _count: { select: { lectures: true } },
 } satisfies Prisma.ModuleSelect;
 
@@ -30,10 +30,10 @@ export class ModulesService {
 
     const module = await this.prisma.module.create({
       data: {
-        course_id:          courseId,
-        module_name:        dto.moduleName,
+        course_id: courseId,
+        module_name: dto.moduleName,
         module_description: dto.moduleDescription,
-        module_order:       order,
+        module_order: order,
       },
       select: MODULE_SELECT,
     });
@@ -42,8 +42,8 @@ export class ModulesService {
 
   async findByCourse(courseId: number) {
     const modules = await this.prisma.module.findMany({
-      where:   { course_id: courseId, is_deleted: false },
-      select:  MODULE_SELECT,
+      where: { course_id: courseId, is_deleted: false },
+      select: MODULE_SELECT,
       orderBy: { module_order: 'asc' },
     });
     return { success: true, data: modules };
@@ -51,7 +51,7 @@ export class ModulesService {
 
   async findOne(id: number) {
     const module = await this.prisma.module.findFirst({
-      where:  { module_id: id, is_deleted: false },
+      where: { module_id: id, is_deleted: false },
       select: MODULE_SELECT,
     });
     if (!module) throw new NotFoundException('Module not found');
@@ -63,9 +63,11 @@ export class ModulesService {
     const module = await this.prisma.module.update({
       where: { module_id: id },
       data: {
-        ...(dto.moduleName        !== undefined && { module_name:        dto.moduleName }),
-        ...(dto.moduleDescription !== undefined && { module_description: dto.moduleDescription }),
-        ...(dto.moduleOrder       !== undefined && { module_order:       dto.moduleOrder }),
+        ...(dto.moduleName !== undefined && { module_name: dto.moduleName }),
+        ...(dto.moduleDescription !== undefined && {
+          module_description: dto.moduleDescription,
+        }),
+        ...(dto.moduleOrder !== undefined && { module_order: dto.moduleOrder }),
       },
       select: MODULE_SELECT,
     });
@@ -76,7 +78,7 @@ export class ModulesService {
     await this.findOne(id);
     await this.prisma.module.update({
       where: { module_id: id },
-      data:  { is_deleted: true, deleted_at: new Date() },
+      data: { is_deleted: true, deleted_at: new Date() },
     });
     return { success: true, message: 'Module deleted successfully' };
   }

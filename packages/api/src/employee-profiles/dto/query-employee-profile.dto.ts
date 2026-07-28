@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class QueryEmployeeProfileDto {
   @ApiPropertyOptional({ default: 1 })
@@ -18,7 +25,9 @@ export class QueryEmployeeProfileDto {
   @Max(100)
   limit?: number = 20;
 
-  @ApiPropertyOptional({ description: 'Search by designation or specialization' })
+  @ApiPropertyOptional({
+    description: 'Search by designation or specialization',
+  })
   @IsOptional()
   @IsString()
   search?: string;

@@ -9,12 +9,18 @@ export enum EnrollmentStatusDto {
 }
 
 export class CreateEnrollmentDto {
-  @ApiProperty({ example: 1, description: 'course_id to enroll the student profile in' })
+  @ApiProperty({
+    example: 1,
+    description: 'course_id to enroll the student profile in',
+  })
   @IsInt()
   @Min(1)
   courseId: number;
 
-  @ApiPropertyOptional({ enum: EnrollmentStatusDto, default: EnrollmentStatusDto.ASSIGNED })
+  @ApiPropertyOptional({
+    enum: EnrollmentStatusDto,
+    default: EnrollmentStatusDto.ASSIGNED,
+  })
   @IsOptional()
   @IsEnum(EnrollmentStatusDto)
   enrollmentStatus?: EnrollmentStatusDto;

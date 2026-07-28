@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ContentType, LessonStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateLectureDto } from './dto/create-lecture.dto';
+import { ContentTypeEnum, CreateLectureDto } from './dto/create-lecture.dto';
 import { UpdateLectureDto } from './dto/update-lecture.dto';
 
 const LECTURE_SELECT = {
@@ -10,6 +10,7 @@ const LECTURE_SELECT = {
   content_type: true,
   title: true,
   description: true,
+  content: true,
   display_order: true,
   lecture_status: true,
   pdf_url: true,
@@ -39,9 +40,11 @@ export class LecturesService {
         content_type: dto.contentType,
         title: dto.title,
         description: dto.description,
+        content: dto.content,
         display_order: order,
         lecture_status: dto.lectureStatus ?? 'DRAFT',
-        pdf_url: dto.pdfUrl,
+        pdf_url:
+          dto.contentType === ContentTypeEnum.ASSIGNMENT ? null : dto.pdfUrl,
         estimated_duration_minutes: dto.estimatedDurationMinutes,
         due_date: dto.dueDate ? new Date(dto.dueDate) : undefined,
         max_marks: dto.maxMarks,
@@ -70,7 +73,10 @@ export class LecturesService {
   }
 
   async update(id: number, dto: UpdateLectureDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+    const effectiveContentType = dto.contentType ?? existing.data.content_type;
+    const isAssignment = effectiveContentType === ContentTypeEnum.ASSIGNMENT;
+
     const lecture = await this.prisma.lecture.update({
       where: { lecture_id: id },
       data: {
@@ -79,13 +85,16 @@ export class LecturesService {
         }),
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.content !== undefined && { content: dto.content }),
         ...(dto.displayOrder !== undefined && {
           display_order: dto.displayOrder,
         }),
         ...(dto.lectureStatus !== undefined && {
           lecture_status: dto.lectureStatus,
         }),
-        ...(dto.pdfUrl !== undefined && { pdf_url: dto.pdfUrl }),
+        ...(isAssignment
+          ? { pdf_url: null }
+          : dto.pdfUrl !== undefined && { pdf_url: dto.pdfUrl }),
         ...(dto.estimatedDurationMinutes !== undefined && {
           estimated_duration_minutes: dto.estimatedDurationMinutes,
         }),

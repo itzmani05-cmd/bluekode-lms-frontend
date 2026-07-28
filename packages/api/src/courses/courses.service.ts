@@ -6,13 +6,13 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
 
 const COURSE_SELECT = {
-  course_id:   true,
+  course_id: true,
   course_name: true,
   description: true,
-  status:      true,
-  is_deleted:  true,
-  created_at:  true,
-  updated_at:  true,
+  status: true,
+  is_deleted: true,
+  created_at: true,
+  updated_at: true,
   _count: { select: { modules: true, enrollments: true } },
 } satisfies Prisma.CourseSelect;
 
@@ -25,7 +25,7 @@ export class CoursesService {
       data: {
         course_name: dto.name,
         description: dto.description,
-        status: (dto.status ?? 'DRAFT') as CourseStatus,
+        status: dto.status ?? 'DRAFT',
       },
       select: COURSE_SELECT,
     });
@@ -36,7 +36,7 @@ export class CoursesService {
     const { page = 1, limit = 20, search, status } = dto;
     const where: Prisma.CourseWhereInput = {
       is_deleted: false,
-      ...(status && { status: status as CourseStatus }),
+      ...(status && { status: status }),
       ...(search && { course_name: { contains: search, mode: 'insensitive' } }),
     };
 
@@ -72,9 +72,9 @@ export class CoursesService {
     const course = await this.prisma.course.update({
       where: { course_id: id },
       data: {
-        ...(dto.name      && { course_name: dto.name }),
+        ...(dto.name && { course_name: dto.name }),
         ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.status    && { status: dto.status as CourseStatus }),
+        ...(dto.status && { status: dto.status }),
       },
       select: COURSE_SELECT,
     });

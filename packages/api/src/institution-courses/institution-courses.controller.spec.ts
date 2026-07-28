@@ -18,10 +18,14 @@ describe('InstitutionCoursesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [InstitutionCoursesController],
-      providers: [{ provide: InstitutionCoursesService, useValue: mockService }],
+      providers: [
+        { provide: InstitutionCoursesService, useValue: mockService },
+      ],
     }).compile();
 
-    controller = module.get<InstitutionCoursesController>(InstitutionCoursesController);
+    controller = module.get<InstitutionCoursesController>(
+      InstitutionCoursesController,
+    );
     jest.clearAllMocks();
   });
 
@@ -37,15 +41,29 @@ describe('InstitutionCoursesController', () => {
   });
 
   it('findAllForInstitution — passes institutionId and query to service', async () => {
-    mockService.findAllForInstitution.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForInstitution.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForInstitution(1, { page: 1, limit: 10 });
-    expect(mockService.findAllForInstitution).toHaveBeenCalledWith(1, { page: 1, limit: 10 });
+    expect(mockService.findAllForInstitution).toHaveBeenCalledWith(1, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findAllForCourse — passes courseId and query to service', async () => {
-    mockService.findAllForCourse.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForCourse.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForCourse(1, { page: 1, limit: 10 });
-    expect(mockService.findAllForCourse).toHaveBeenCalledWith(1, { page: 1, limit: 10 });
+    expect(mockService.findAllForCourse).toHaveBeenCalledWith(1, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findOne — passes parsed int id to service', async () => {

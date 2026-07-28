@@ -28,21 +28,35 @@ import type { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 @ApiBearerAuth()
 @Controller()
 export class EmployeeInstitutionsController {
-  constructor(private readonly employeeInstitutionsService: EmployeeInstitutionsService) {}
+  constructor(
+    private readonly employeeInstitutionsService: EmployeeInstitutionsService,
+  ) {}
 
   @Post('institutions/:institutionId/employees')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Assign an employee profile to an institution (Admin only)' })
+  @ApiOperation({
+    summary: 'Assign an employee profile to an institution (Admin only)',
+  })
   @ApiParam({ name: 'institutionId', type: Number })
   @ApiResponse({ status: 201, description: 'Assignment created successfully' })
-  @ApiResponse({ status: 404, description: 'Institution or employee profile not found' })
-  @ApiResponse({ status: 409, description: 'Employee already assigned to this institution' })
+  @ApiResponse({
+    status: 404,
+    description: 'Institution or employee profile not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Employee already assigned to this institution',
+  })
   create(
     @Param('institutionId', ParseIntPipe) institutionId: number,
     @Body() dto: CreateEmployeeInstitutionDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.employeeInstitutionsService.create(institutionId, dto, user.sub);
+    return this.employeeInstitutionsService.create(
+      institutionId,
+      dto,
+      user.sub,
+    );
   }
 
   @Get('institutions/:institutionId/employees')
@@ -54,7 +68,10 @@ export class EmployeeInstitutionsController {
     @Param('institutionId', ParseIntPipe) institutionId: number,
     @Query() dto: QueryEmployeeInstitutionDto,
   ) {
-    return this.employeeInstitutionsService.findAllForInstitution(institutionId, dto);
+    return this.employeeInstitutionsService.findAllForInstitution(
+      institutionId,
+      dto,
+    );
   }
 
   @Get('employee-profiles/:employeeProfileId/institutions')
@@ -66,13 +83,19 @@ export class EmployeeInstitutionsController {
     @Param('employeeProfileId', ParseIntPipe) employeeProfileId: number,
     @Query() dto: QueryEmployeeInstitutionDto,
   ) {
-    return this.employeeInstitutionsService.findAllForEmployee(employeeProfileId, dto);
+    return this.employeeInstitutionsService.findAllForEmployee(
+      employeeProfileId,
+      dto,
+    );
   }
 
   @Get('employee-institutions/:id')
   @ApiOperation({ summary: 'Get an employee institution assignment by ID' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Assignment retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Assignment retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Assignment not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.employeeInstitutionsService.findOne(id);
@@ -80,7 +103,9 @@ export class EmployeeInstitutionsController {
 
   @Patch('employee-institutions/:id')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Update an employee institution assignment (Admin only)' })
+  @ApiOperation({
+    summary: 'Update an employee institution assignment (Admin only)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Assignment updated successfully' })
   @ApiResponse({ status: 404, description: 'Assignment not found' })
@@ -94,7 +119,9 @@ export class EmployeeInstitutionsController {
 
   @Delete('employee-institutions/:id')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Remove an employee institution assignment (Admin only)' })
+  @ApiOperation({
+    summary: 'Remove an employee institution assignment (Admin only)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Assignment deleted successfully' })
   @ApiResponse({ status: 404, description: 'Assignment not found' })

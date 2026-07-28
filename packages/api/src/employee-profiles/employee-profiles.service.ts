@@ -33,7 +33,9 @@ const EMPLOYEE_PROFILE_SELECT = {
   },
   employeeInstitutions: {
     where: { status: 'ACTIVE' },
-    select: { institution: { select: { institution_id: true, institution_name: true } } },
+    select: {
+      institution: { select: { institution_id: true, institution_name: true } },
+    },
   },
 } satisfies Prisma.EmployeeProfileSelect;
 
@@ -41,14 +43,22 @@ const EMPLOYEE_PROFILE_SELECT = {
 export class EmployeeProfilesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, dto: CreateEmployeeProfileDto, adminUserId: number) {
+  async create(
+    userId: number,
+    dto: CreateEmployeeProfileDto,
+    adminUserId: number,
+  ) {
     const user = await this.prisma.user.findFirst({
       where: { user_id: userId, is_deleted: false },
-      include: { userRoles: { select: { role: { select: { role_name: true } } } } },
+      include: {
+        userRoles: { select: { role: { select: { role_name: true } } } },
+      },
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const isStaff = user.userRoles.some((ur) => STAFF_ROLES.includes(ur.role.role_name));
+    const isStaff = user.userRoles.some((ur) =>
+      STAFF_ROLES.includes(ur.role.role_name),
+    );
     if (!isStaff) {
       throw new BadRequestException(
         `User does not have a staff role (${STAFF_ROLES.join(', ')})`,
@@ -70,8 +80,13 @@ export class EmployeeProfilesService {
       });
       return { success: true, data: profile };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('This user already has an employee profile');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This user already has an employee profile',
+        );
       }
       throw e;
     }
@@ -154,18 +169,24 @@ export class EmployeeProfilesService {
       select: EMPLOYEE_PROFILE_SELECT,
     });
 
-    if (!profile) throw new NotFoundException('Employee profile not found for this user');
+    if (!profile)
+      throw new NotFoundException('Employee profile not found for this user');
     return { success: true, data: profile };
   }
 
   async update(id: number, dto: UpdateEmployeeProfileDto, adminUserId: number) {
     await this.findOne(id);
 
-    const data: Prisma.EmployeeProfileUncheckedUpdateInput = { updated_by: adminUserId };
+    const data: Prisma.EmployeeProfileUncheckedUpdateInput = {
+      updated_by: adminUserId,
+    };
     if (dto.designation !== undefined) data.designation = dto.designation;
-    if (dto.specialization !== undefined) data.specialization = dto.specialization;
-    if (dto.yearsOfExperience !== undefined) data.years_of_experience = dto.yearsOfExperience;
-    if (dto.joiningDate !== undefined) data.joining_date = new Date(dto.joiningDate);
+    if (dto.specialization !== undefined)
+      data.specialization = dto.specialization;
+    if (dto.yearsOfExperience !== undefined)
+      data.years_of_experience = dto.yearsOfExperience;
+    if (dto.joiningDate !== undefined)
+      data.joining_date = new Date(dto.joiningDate);
     if (dto.isActive !== undefined) data.is_active = dto.isActive;
 
     const profile = await this.prisma.employeeProfile.update({
@@ -181,9 +202,14 @@ export class EmployeeProfilesService {
     await this.findOne(id);
 
     try {
-      await this.prisma.employeeProfile.delete({ where: { employee_profile_id: id } });
+      await this.prisma.employeeProfile.delete({
+        where: { employee_profile_id: id },
+      });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2003'
+      ) {
         throw new ConflictException(
           'Cannot delete an employee profile with existing institution assignments, reviewed submissions, or trainer substitutions',
         );

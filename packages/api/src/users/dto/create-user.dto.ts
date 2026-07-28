@@ -1,12 +1,23 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {IsEmail,IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUUID, Matches , MaxLength,MinLength,} from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsUUID,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export enum UserStatus {
-    ACTIVE='ACTIVE', INACTIVE ='INACTIVE',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
 
 export class CreateUserDto {
-
   //first name
   @ApiProperty({
     example: 'Manikandan',
@@ -44,12 +55,10 @@ export class CreateUserDto {
   @IsString()
   @MinLength(8)
   @MaxLength(20)
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/,
-    {
-      message:'Password must contain uppercase, lowercase, number and special character',
-    },
-  )
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message:
+      'Password must contain uppercase, lowercase, number and special character',
+  })
   password: string;
 
   //phone number

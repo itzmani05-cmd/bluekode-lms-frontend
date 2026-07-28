@@ -1,5 +1,10 @@
 import { Body, Controller, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -24,17 +29,27 @@ export class AuthController {
 
   @Post('change-password')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'First-time password change (sets account_status to APPROVED)' })
+  @ApiOperation({
+    summary: 'First-time password change (sets account_status to APPROVED)',
+  })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() user: JwtPayload) {
+  changePassword(
+    @Body() dto: ChangePasswordDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.authService.changePassword(user.sub, dto);
   }
 
   @Patch('complete-profile')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Complete onboarding profile (sets account_status to ACTIVE)' })
+  @ApiOperation({
+    summary: 'Complete onboarding profile (sets account_status to ACTIVE)',
+  })
   @ApiResponse({ status: 200, description: 'Profile completed successfully' })
-  completeProfile(@Body() dto: CompleteProfileDto, @CurrentUser() user: JwtPayload) {
+  completeProfile(
+    @Body() dto: CompleteProfileDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.authService.completeProfile(user.sub, user.roles, dto);
   }
 }

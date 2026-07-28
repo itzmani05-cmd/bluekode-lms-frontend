@@ -28,16 +28,26 @@ import type { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 @ApiBearerAuth()
 @Controller()
 export class EmployeeProfilesController {
-  constructor(private readonly employeeProfilesService: EmployeeProfilesService) {}
+  constructor(
+    private readonly employeeProfilesService: EmployeeProfilesService,
+  ) {}
 
   @Post('users/:userId/employee-profile')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Create an employee profile for a staff user (Admin only)' })
+  @ApiOperation({
+    summary: 'Create an employee profile for a staff user (Admin only)',
+  })
   @ApiParam({ name: 'userId', type: Number })
-  @ApiResponse({ status: 201, description: 'Employee profile created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Employee profile created successfully',
+  })
   @ApiResponse({ status: 400, description: 'User does not have a staff role' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 409, description: 'User already has an employee profile' })
+  @ApiResponse({
+    status: 409,
+    description: 'User already has an employee profile',
+  })
   create(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: CreateEmployeeProfileDto,
@@ -49,15 +59,26 @@ export class EmployeeProfilesController {
   @Get('users/:userId/employee-profile')
   @ApiOperation({ summary: "Get a user's employee profile" })
   @ApiParam({ name: 'userId', type: Number })
-  @ApiResponse({ status: 200, description: 'Employee profile retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Employee profile not found for this user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Employee profile retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Employee profile not found for this user',
+  })
   findByUser(@Param('userId', ParseIntPipe) userId: number) {
     return this.employeeProfilesService.findByUser(userId);
   }
 
   @Get('employee-profiles')
-  @ApiOperation({ summary: 'List all employee profiles with pagination and filters' })
-  @ApiResponse({ status: 200, description: 'Paginated list of employee profiles' })
+  @ApiOperation({
+    summary: 'List all employee profiles with pagination and filters',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of employee profiles',
+  })
   findAll(@Query() dto: QueryEmployeeProfileDto) {
     return this.employeeProfilesService.findAll(dto);
   }
@@ -65,7 +86,10 @@ export class EmployeeProfilesController {
   @Get('employee-profiles/:id')
   @ApiOperation({ summary: 'Get an employee profile by ID' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Employee profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Employee profile retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Employee profile not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.employeeProfilesService.findOne(id);
@@ -75,7 +99,10 @@ export class EmployeeProfilesController {
   @Roles('Admin')
   @ApiOperation({ summary: 'Update an employee profile (Admin only)' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Employee profile updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Employee profile updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Employee profile not found' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -89,9 +116,15 @@ export class EmployeeProfilesController {
   @Roles('Admin')
   @ApiOperation({ summary: 'Delete an employee profile (Admin only)' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Employee profile deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Employee profile deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Employee profile not found' })
-  @ApiResponse({ status: 409, description: 'Employee profile has existing dependent records' })
+  @ApiResponse({
+    status: 409,
+    description: 'Employee profile has existing dependent records',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.employeeProfilesService.remove(id);
   }

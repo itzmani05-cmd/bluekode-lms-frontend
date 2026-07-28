@@ -7,18 +7,27 @@ export enum EmployeeInstitutionStatusDto {
 }
 
 export class CreateEmployeeInstitutionDto {
-  @ApiProperty({ example: 1, description: 'employee_profile_id to assign to this institution' })
+  @ApiProperty({
+    example: 1,
+    description: 'employee_profile_id to assign to this institution',
+  })
   @IsInt()
   @Min(1)
   employeeProfileId: number;
 
-  @ApiPropertyOptional({ example: 2, description: 'employee_profile_id of the project lead' })
+  @ApiPropertyOptional({
+    example: 2,
+    description: 'employee_profile_id of the project lead',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)
   projectLeadEmployeeId?: number;
 
-  @ApiPropertyOptional({ example: 3, description: 'employee_profile_id of the technical lead' })
+  @ApiPropertyOptional({
+    example: 3,
+    description: 'employee_profile_id of the technical lead',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)

@@ -4,8 +4,8 @@ import { LecturesService } from './lectures.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports:     [PrismaModule],
+  imports: [PrismaModule],
   controllers: [LecturesController],
-  providers:   [LecturesService],
+  providers: [LecturesService],
 })
 export class LecturesModule {}

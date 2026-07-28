@@ -137,16 +137,11 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
             </div>
           )}
         </div>
-
-        <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-          <HelpCircle className="h-5 w-5" />
-        </button>
         <button
           onClick={() => setLearnMoreOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+          className="flex items-center gap-1 py-1.5 text-xs font-bold text-slate-400 hover:bg-emerald-50 rounded-lg transition-colors"
         >
-          <Info className="h-4 w-4" />
-          Learn More
+          <Info className="h-5 w-5" />
         </button>
         <div className="h-8 w-px bg-slate-200" />
         <div className="flex items-center gap-2">

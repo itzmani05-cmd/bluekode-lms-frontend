@@ -19,15 +19,21 @@ const mockEnrollment = {
   updated_at: new Date(),
 };
 
-const uniqueViolation = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-  code: 'P2002',
-  clientVersion: '7.0.0',
-});
+const uniqueViolation = new Prisma.PrismaClientKnownRequestError(
+  'Unique constraint failed',
+  {
+    code: 'P2002',
+    clientVersion: '7.0.0',
+  },
+);
 
-const fkViolation = new Prisma.PrismaClientKnownRequestError('Foreign key constraint failed', {
-  code: 'P2003',
-  clientVersion: '7.0.0',
-});
+const fkViolation = new Prisma.PrismaClientKnownRequestError(
+  'Foreign key constraint failed',
+  {
+    code: 'P2003',
+    clientVersion: '7.0.0',
+  },
+);
 
 const mockPrisma = {
   studentProfile: { findFirst: jest.fn() },
@@ -54,7 +60,9 @@ describe('StudentCourseEnrollmentsService', () => {
       ],
     }).compile();
 
-    service = module.get<StudentCourseEnrollmentsService>(StudentCourseEnrollmentsService);
+    service = module.get<StudentCourseEnrollmentsService>(
+      StudentCourseEnrollmentsService,
+    );
     jest.clearAllMocks();
   });
 
@@ -64,9 +72,11 @@ describe('StudentCourseEnrollmentsService', () => {
     it('creates and returns an enrollment', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(mockProfile);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
-      mockPrisma.studentCourseEnrollment.create.mockResolvedValue(mockEnrollment);
+      mockPrisma.studentCourseEnrollment.create.mockResolvedValue(
+        mockEnrollment,
+      );
 
-      const result = await service.create(10, dto as any, 1);
+      const result = await service.create(10, dto, 1);
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockEnrollment);
@@ -74,21 +84,29 @@ describe('StudentCourseEnrollmentsService', () => {
 
     it('throws NotFoundException when the student profile does not exist', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(null);
-      await expect(service.create(10, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(10, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws NotFoundException when the course does not exist', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(mockProfile);
       mockPrisma.course.findFirst.mockResolvedValue(null);
-      await expect(service.create(10, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(10, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws ConflictException when already enrolled', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(mockProfile);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
-      mockPrisma.studentCourseEnrollment.create.mockRejectedValue(uniqueViolation);
+      mockPrisma.studentCourseEnrollment.create.mockRejectedValue(
+        uniqueViolation,
+      );
 
-      await expect(service.create(10, dto as any, 1)).rejects.toThrow(ConflictException);
+      await expect(service.create(10, dto as any, 1)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -97,7 +115,10 @@ describe('StudentCourseEnrollmentsService', () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(mockProfile);
       mockPrisma.$transaction.mockResolvedValue([[mockEnrollment], 1]);
 
-      const result = await service.findAllForProfile(10, { page: 1, limit: 20 });
+      const result = await service.findAllForProfile(10, {
+        page: 1,
+        limit: 20,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -105,9 +126,9 @@ describe('StudentCourseEnrollmentsService', () => {
 
     it('throws NotFoundException when the profile does not exist', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(null);
-      await expect(service.findAllForProfile(999, { page: 1, limit: 20 })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findAllForProfile(999, { page: 1, limit: 20 }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -124,15 +145,17 @@ describe('StudentCourseEnrollmentsService', () => {
 
     it('throws NotFoundException when the course does not exist', async () => {
       mockPrisma.course.findFirst.mockResolvedValue(null);
-      await expect(service.findAllForCourse(999, { page: 1, limit: 20 })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findAllForCourse(999, { page: 1, limit: 20 }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findOne', () => {
     it('returns an enrollment when found', async () => {
-      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(mockEnrollment);
+      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(
+        mockEnrollment,
+      );
       const result = await service.findOne(5);
       expect(result.success).toBe(true);
       expect(result.data.enrollment_id).toBe(5);
@@ -146,13 +169,19 @@ describe('StudentCourseEnrollmentsService', () => {
 
   describe('update', () => {
     it('updates and returns the enrollment', async () => {
-      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(mockEnrollment);
+      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(
+        mockEnrollment,
+      );
       mockPrisma.studentCourseEnrollment.update.mockResolvedValue({
         ...mockEnrollment,
         enrollment_status: EnrollmentStatus.COMPLETED,
       });
 
-      const result = await service.update(5, { enrollmentStatus: 'COMPLETED' } as any, 1);
+      const result = await service.update(
+        5,
+        { enrollmentStatus: 'COMPLETED' } as any,
+        1,
+      );
 
       expect(result.success).toBe(true);
       expect(result.data.enrollment_status).toBe(EnrollmentStatus.COMPLETED);
@@ -168,7 +197,9 @@ describe('StudentCourseEnrollmentsService', () => {
 
   describe('remove', () => {
     it('deletes the enrollment', async () => {
-      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(mockEnrollment);
+      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(
+        mockEnrollment,
+      );
       mockPrisma.studentCourseEnrollment.delete.mockResolvedValue({});
 
       const result = await service.remove(5);
@@ -185,7 +216,9 @@ describe('StudentCourseEnrollmentsService', () => {
     });
 
     it('throws ConflictException when progress or submissions exist', async () => {
-      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(mockEnrollment);
+      mockPrisma.studentCourseEnrollment.findFirst.mockResolvedValue(
+        mockEnrollment,
+      );
       mockPrisma.studentCourseEnrollment.delete.mockRejectedValue(fkViolation);
 
       await expect(service.remove(5)).rejects.toThrow(ConflictException);

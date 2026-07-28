@@ -57,21 +57,30 @@ export class TrainerAssignmentsController {
   @Get('trainer/:employeeProfileId')
   @ApiOperation({ summary: "Get a trainer's own assignments" })
   @ApiParam({ name: 'employeeProfileId', type: Number })
-  findByTrainer(@Param('employeeProfileId', ParseIntPipe) employeeProfileId: number) {
+  findByTrainer(
+    @Param('employeeProfileId', ParseIntPipe) employeeProfileId: number,
+  ) {
     return this.service.findByTrainer(employeeProfileId);
   }
 
   @Get('trainer/:employeeProfileId/students')
-  @ApiOperation({ summary: "Get all students accessible to a trainer" })
+  @ApiOperation({ summary: 'Get all students accessible to a trainer' })
   @ApiParam({ name: 'employeeProfileId', type: Number })
-  getAccessibleStudents(@Param('employeeProfileId', ParseIntPipe) employeeProfileId: number) {
+  getAccessibleStudents(
+    @Param('employeeProfileId', ParseIntPipe) employeeProfileId: number,
+  ) {
     return this.service.getAccessibleStudents(employeeProfileId);
   }
 
   @Get('trainer/:employeeProfileId/submissions')
-  @ApiOperation({ summary: "Get all assignment submissions from a trainer's accessible students" })
+  @ApiOperation({
+    summary:
+      "Get all assignment submissions from a trainer's accessible students",
+  })
   @ApiParam({ name: 'employeeProfileId', type: Number })
-  getStudentSubmissions(@Param('employeeProfileId', ParseIntPipe) employeeProfileId: number) {
+  getStudentSubmissions(
+    @Param('employeeProfileId', ParseIntPipe) employeeProfileId: number,
+  ) {
     return this.service.getStudentSubmissions(employeeProfileId);
   }
 

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
@@ -6,17 +10,17 @@ import { UpdateInstitutionDto } from './dto/update-institution.dto';
 import { QueryInstitutionDto } from './dto/query-institution.dto';
 
 const INSTITUTION_SELECT = {
-  institution_id:   true,
+  institution_id: true,
   institution_name: true,
-  address:          true,
-  city:             true,
-  is_deleted:       true,
-  created_at:       true,
+  address: true,
+  city: true,
+  is_deleted: true,
+  created_at: true,
   _count: {
     select: {
-      institutionCourses:   true,
+      institutionCourses: true,
       employeeInstitutions: true,
-      studentProfiles:      true,
+      studentProfiles: true,
     },
   },
 } satisfies Prisma.InstitutionSelect;
@@ -31,14 +35,19 @@ export class InstitutionsService {
         data: {
           institution_name: dto.institutionName,
           address: dto.address,
-          city:    dto.city,
+          city: dto.city,
         },
         select: INSTITUTION_SELECT,
       });
       return { success: true, data: institution };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('An institution with this name already exists');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'An institution with this name already exists',
+        );
       }
       throw e;
     }
@@ -51,7 +60,7 @@ export class InstitutionsService {
       ...(search && {
         OR: [
           { institution_name: { contains: search, mode: 'insensitive' } },
-          { city:             { contains: search, mode: 'insensitive' } },
+          { city: { contains: search, mode: 'insensitive' } },
         ],
       }),
     };
@@ -90,7 +99,7 @@ export class InstitutionsService {
       data: {
         ...(dto.institutionName && { institution_name: dto.institutionName }),
         ...(dto.address !== undefined && { address: dto.address }),
-        ...(dto.city    !== undefined && { city:    dto.city    }),
+        ...(dto.city !== undefined && { city: dto.city }),
       },
       select: INSTITUTION_SELECT,
     });

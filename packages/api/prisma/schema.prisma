@@ -28,6 +28,7 @@ enum CourseStatus {
 
 enum ContentType {
   LECTURE
+  TASK
   ASSIGNMENT
 }
 
@@ -347,6 +348,7 @@ model Lecture {
   content_type               ContentType
   title                      String           @db.VarChar(255)
   description                String?          @db.Text
+  content                    String?          @db.Text
   display_order              Int
   pdf_url                    String?          @db.Text
   estimated_duration_minutes Int?

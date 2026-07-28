@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { FormStatus, Prisma } from '@prisma/client';
 import { StudentProfilesService } from './student-profiles.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -23,15 +27,21 @@ const mockProfile = {
   updated_at: new Date(),
 };
 
-const uniqueViolation = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-  code: 'P2002',
-  clientVersion: '7.0.0',
-});
+const uniqueViolation = new Prisma.PrismaClientKnownRequestError(
+  'Unique constraint failed',
+  {
+    code: 'P2002',
+    clientVersion: '7.0.0',
+  },
+);
 
-const fkViolation = new Prisma.PrismaClientKnownRequestError('Foreign key constraint failed', {
-  code: 'P2003',
-  clientVersion: '7.0.0',
-});
+const fkViolation = new Prisma.PrismaClientKnownRequestError(
+  'Foreign key constraint failed',
+  {
+    code: 'P2003',
+    clientVersion: '7.0.0',
+  },
+);
 
 const mockPrisma = {
   user: { findFirst: jest.fn() },
@@ -53,7 +63,10 @@ describe('StudentProfilesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StudentProfilesService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        StudentProfilesService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<StudentProfilesService>(StudentProfilesService);
@@ -68,7 +81,7 @@ describe('StudentProfilesService', () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
       mockPrisma.studentProfile.create.mockResolvedValue(mockProfile);
 
-      const result = await service.create(3, dto as any, 1);
+      const result = await service.create(3, dto, 1);
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockProfile);
@@ -76,7 +89,9 @@ describe('StudentProfilesService', () => {
 
     it('throws NotFoundException when the user does not exist', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
-      await expect(service.create(3, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(3, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException when the user is not a Student', async () => {
@@ -84,13 +99,17 @@ describe('StudentProfilesService', () => {
         ...mockStudentUser,
         userRoles: [{ role: { role_name: 'Trainer' } }],
       });
-      await expect(service.create(3, dto as any, 1)).rejects.toThrow(BadRequestException);
+      await expect(service.create(3, dto as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws NotFoundException when the institution does not exist', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(mockStudentUser);
       mockPrisma.institution.findFirst.mockResolvedValue(null);
-      await expect(service.create(3, dto as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(3, dto as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws ConflictException when the user already has a profile', async () => {
@@ -98,7 +117,9 @@ describe('StudentProfilesService', () => {
       mockPrisma.institution.findFirst.mockResolvedValue(mockInstitution);
       mockPrisma.studentProfile.create.mockRejectedValue(uniqueViolation);
 
-      await expect(service.create(3, dto as any, 1)).rejects.toThrow(ConflictException);
+      await expect(service.create(3, dto as any, 1)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -145,9 +166,12 @@ describe('StudentProfilesService', () => {
   describe('update', () => {
     it('updates and returns the profile', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(mockProfile);
-      mockPrisma.studentProfile.update.mockResolvedValue({ ...mockProfile, department: 'Updated' });
+      mockPrisma.studentProfile.update.mockResolvedValue({
+        ...mockProfile,
+        department: 'Updated',
+      });
 
-      const result = await service.update(10, { department: 'Updated' } as any, 1);
+      const result = await service.update(10, { department: 'Updated' }, 1);
 
       expect(result.success).toBe(true);
       expect(result.data.department).toBe('Updated');
@@ -164,9 +188,9 @@ describe('StudentProfilesService', () => {
 
     it('throws NotFoundException when the profile does not exist', async () => {
       mockPrisma.studentProfile.findFirst.mockResolvedValue(null);
-      await expect(service.update(999, { department: 'x' } as any, 1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.update(999, { department: 'x' } as any, 1),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { EmployeeProfilesService } from './employee-profiles.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -22,15 +26,21 @@ const mockProfile = {
   updated_at: new Date(),
 };
 
-const uniqueViolation = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-  code: 'P2002',
-  clientVersion: '7.0.0',
-});
+const uniqueViolation = new Prisma.PrismaClientKnownRequestError(
+  'Unique constraint failed',
+  {
+    code: 'P2002',
+    clientVersion: '7.0.0',
+  },
+);
 
-const fkViolation = new Prisma.PrismaClientKnownRequestError('Foreign key constraint failed', {
-  code: 'P2003',
-  clientVersion: '7.0.0',
-});
+const fkViolation = new Prisma.PrismaClientKnownRequestError(
+  'Foreign key constraint failed',
+  {
+    code: 'P2003',
+    clientVersion: '7.0.0',
+  },
+);
 
 const mockPrisma = {
   user: { findFirst: jest.fn() },
@@ -51,7 +61,10 @@ describe('EmployeeProfilesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EmployeeProfilesService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        EmployeeProfilesService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<EmployeeProfilesService>(EmployeeProfilesService);
@@ -63,7 +76,7 @@ describe('EmployeeProfilesService', () => {
       mockPrisma.user.findFirst.mockResolvedValue(mockTrainerUser);
       mockPrisma.employeeProfile.create.mockResolvedValue(mockProfile);
 
-      const result = await service.create(2, { designation: 'Trainer' } as any, 1);
+      const result = await service.create(2, { designation: 'Trainer' }, 1);
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockProfile);
@@ -71,7 +84,9 @@ describe('EmployeeProfilesService', () => {
 
     it('throws NotFoundException when the user does not exist', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
-      await expect(service.create(2, {} as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.create(2, {} as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException when the user has no staff role', async () => {
@@ -79,14 +94,18 @@ describe('EmployeeProfilesService', () => {
         ...mockTrainerUser,
         userRoles: [{ role: { role_name: 'Student' } }],
       });
-      await expect(service.create(2, {} as any, 1)).rejects.toThrow(BadRequestException);
+      await expect(service.create(2, {} as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws ConflictException when the user already has a profile', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(mockTrainerUser);
       mockPrisma.employeeProfile.create.mockRejectedValue(uniqueViolation);
 
-      await expect(service.create(2, {} as any, 1)).rejects.toThrow(ConflictException);
+      await expect(service.create(2, {} as any, 1)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -130,9 +149,12 @@ describe('EmployeeProfilesService', () => {
   describe('update', () => {
     it('updates and returns the profile', async () => {
       mockPrisma.employeeProfile.findFirst.mockResolvedValue(mockProfile);
-      mockPrisma.employeeProfile.update.mockResolvedValue({ ...mockProfile, is_active: false });
+      mockPrisma.employeeProfile.update.mockResolvedValue({
+        ...mockProfile,
+        is_active: false,
+      });
 
-      const result = await service.update(1, { isActive: false } as any, 1);
+      const result = await service.update(1, { isActive: false }, 1);
 
       expect(result.success).toBe(true);
       expect(result.data.is_active).toBe(false);
@@ -140,7 +162,9 @@ describe('EmployeeProfilesService', () => {
 
     it('throws NotFoundException when the profile does not exist', async () => {
       mockPrisma.employeeProfile.findFirst.mockResolvedValue(null);
-      await expect(service.update(999, {} as any, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, {} as any, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

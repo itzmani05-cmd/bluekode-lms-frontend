@@ -19,7 +19,9 @@ describe('StudentCourseEnrollmentsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StudentCourseEnrollmentsController],
-      providers: [{ provide: StudentCourseEnrollmentsService, useValue: mockService }],
+      providers: [
+        { provide: StudentCourseEnrollmentsService, useValue: mockService },
+      ],
     }).compile();
 
     controller = module.get<StudentCourseEnrollmentsController>(
@@ -40,15 +42,29 @@ describe('StudentCourseEnrollmentsController', () => {
   });
 
   it('findAllForProfile — passes studentProfileId and query to service', async () => {
-    mockService.findAllForProfile.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForProfile.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForProfile(10, { page: 1, limit: 10 });
-    expect(mockService.findAllForProfile).toHaveBeenCalledWith(10, { page: 1, limit: 10 });
+    expect(mockService.findAllForProfile).toHaveBeenCalledWith(10, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findAllForCourse — passes courseId and query to service', async () => {
-    mockService.findAllForCourse.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockService.findAllForCourse.mockResolvedValue({
+      success: true,
+      data: [],
+      meta: {},
+    });
     await controller.findAllForCourse(1, { page: 1, limit: 10 });
-    expect(mockService.findAllForCourse).toHaveBeenCalledWith(1, { page: 1, limit: 10 });
+    expect(mockService.findAllForCourse).toHaveBeenCalledWith(1, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('findOne — passes parsed int id to service', async () => {
@@ -59,8 +75,16 @@ describe('StudentCourseEnrollmentsController', () => {
 
   it('update — passes id, dto, and admin id to service', async () => {
     mockService.update.mockResolvedValue({ success: true, data: {} });
-    await controller.update(1, { enrollmentStatus: 'COMPLETED' } as any, mockUser);
-    expect(mockService.update).toHaveBeenCalledWith(1, { enrollmentStatus: 'COMPLETED' }, mockUser.sub);
+    await controller.update(
+      1,
+      { enrollmentStatus: 'COMPLETED' } as any,
+      mockUser,
+    );
+    expect(mockService.update).toHaveBeenCalledWith(
+      1,
+      { enrollmentStatus: 'COMPLETED' },
+      mockUser.sub,
+    );
   });
 
   it('remove — passes id to service', async () => {

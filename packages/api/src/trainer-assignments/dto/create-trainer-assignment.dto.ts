@@ -15,12 +15,16 @@ export class CreateTrainerAssignmentDto {
   @IsEnum(AssignmentType)
   assignmentType: AssignmentType;
 
-  @ApiPropertyOptional({ description: 'Required when assignmentType is STUDENT' })
+  @ApiPropertyOptional({
+    description: 'Required when assignmentType is STUDENT',
+  })
   @ValidateIf((o) => o.assignmentType === AssignmentType.STUDENT)
   @IsInt()
   studentProfileId?: number;
 
-  @ApiPropertyOptional({ description: 'Required when assignmentType is INSTITUTION' })
+  @ApiPropertyOptional({
+    description: 'Required when assignmentType is INSTITUTION',
+  })
   @ValidateIf((o) => o.assignmentType === AssignmentType.INSTITUTION)
   @IsInt()
   institutionId?: number;

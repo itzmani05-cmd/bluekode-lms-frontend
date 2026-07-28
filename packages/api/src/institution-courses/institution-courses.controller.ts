@@ -26,7 +26,9 @@ import type { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 @ApiBearerAuth()
 @Controller()
 export class InstitutionCoursesController {
-  constructor(private readonly institutionCoursesService: InstitutionCoursesService) {}
+  constructor(
+    private readonly institutionCoursesService: InstitutionCoursesService,
+  ) {}
 
   @Post('institutions/:institutionId/courses')
   @Roles('Admin')
@@ -34,7 +36,10 @@ export class InstitutionCoursesController {
   @ApiParam({ name: 'institutionId', type: Number })
   @ApiResponse({ status: 201, description: 'Assignment created successfully' })
   @ApiResponse({ status: 404, description: 'Institution or course not found' })
-  @ApiResponse({ status: 409, description: 'Course already assigned to this institution' })
+  @ApiResponse({
+    status: 409,
+    description: 'Course already assigned to this institution',
+  })
   create(
     @Param('institutionId', ParseIntPipe) institutionId: number,
     @Body() dto: CreateInstitutionCourseDto,
@@ -52,7 +57,10 @@ export class InstitutionCoursesController {
     @Param('institutionId', ParseIntPipe) institutionId: number,
     @Query() dto: QueryInstitutionCourseDto,
   ) {
-    return this.institutionCoursesService.findAllForInstitution(institutionId, dto);
+    return this.institutionCoursesService.findAllForInstitution(
+      institutionId,
+      dto,
+    );
   }
 
   @Get('courses/:courseId/institutions')
@@ -70,7 +78,10 @@ export class InstitutionCoursesController {
   @Get('institution-courses/:id')
   @ApiOperation({ summary: 'Get an institution course assignment by ID' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Assignment retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Assignment retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Assignment not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.institutionCoursesService.findOne(id);
@@ -78,7 +89,9 @@ export class InstitutionCoursesController {
 
   @Delete('institution-courses/:id')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Remove a course assignment from an institution (Admin only)' })
+  @ApiOperation({
+    summary: 'Remove a course assignment from an institution (Admin only)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Assignment deleted successfully' })
   @ApiResponse({ status: 404, description: 'Assignment not found' })

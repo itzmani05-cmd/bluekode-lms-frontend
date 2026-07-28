@@ -1,16 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export enum ContentTypeEnum {
-  LECTURE    = 'LECTURE',
+  LECTURE = 'LECTURE',
+  TASK = 'TASK',
   ASSIGNMENT = 'ASSIGNMENT',
 }
 
 export enum LessonStatusEnum {
-  DRAFT     = 'DRAFT',
+  DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
-  ARCHIVED  = 'ARCHIVED',
+  ARCHIVED = 'ARCHIVED',
 }
 
 export class CreateLectureDto {
@@ -29,6 +38,11 @@ export class CreateLectureDto {
   @IsString()
   description?: string;
 
+  @ApiPropertyOptional({ description: 'Full lesson content/body.' })
+  @IsOptional()
+  @IsString()
+  content?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
@@ -41,7 +55,10 @@ export class CreateLectureDto {
   @IsEnum(LessonStatusEnum)
   lectureStatus?: LessonStatusEnum;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description:
+      'Attachment link. Ignored/cleared when contentType is ASSIGNMENT.',
+  })
   @IsOptional()
   @IsString()
   pdfUrl?: string;

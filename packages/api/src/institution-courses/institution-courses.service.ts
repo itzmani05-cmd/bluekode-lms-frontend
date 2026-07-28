@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInstitutionCourseDto } from './dto/create-institution-course.dto';
@@ -32,7 +36,11 @@ export class InstitutionCoursesService {
     if (!course) throw new NotFoundException('Course not found');
   }
 
-  async create(institutionId: number, dto: CreateInstitutionCourseDto, adminUserId: number) {
+  async create(
+    institutionId: number,
+    dto: CreateInstitutionCourseDto,
+    adminUserId: number,
+  ) {
     await this.ensureInstitutionExists(institutionId);
     await this.ensureCourseExists(dto.courseId);
 
@@ -47,14 +55,22 @@ export class InstitutionCoursesService {
       });
       return { success: true, data: link };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('This course is already assigned to this institution');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This course is already assigned to this institution',
+        );
       }
       throw e;
     }
   }
 
-  async findAllForInstitution(institutionId: number, dto: QueryInstitutionCourseDto) {
+  async findAllForInstitution(
+    institutionId: number,
+    dto: QueryInstitutionCourseDto,
+  ) {
     await this.ensureInstitutionExists(institutionId);
     return this.paginate({ institution_id: institutionId }, dto);
   }
@@ -94,15 +110,21 @@ export class InstitutionCoursesService {
       select: INSTITUTION_COURSE_SELECT,
     });
 
-    if (!link) throw new NotFoundException('Institution course assignment not found');
+    if (!link)
+      throw new NotFoundException('Institution course assignment not found');
     return { success: true, data: link };
   }
 
   async remove(id: number) {
     await this.findOne(id);
 
-    await this.prisma.institutionCourse.delete({ where: { institution_course_id: id } });
+    await this.prisma.institutionCourse.delete({
+      where: { institution_course_id: id },
+    });
 
-    return { success: true, message: 'Institution course assignment deleted successfully' };
+    return {
+      success: true,
+      message: 'Institution course assignment deleted successfully',
+    };
   }
 }

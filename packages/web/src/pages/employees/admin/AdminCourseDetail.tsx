@@ -3,7 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ChevronDown, ChevronRight, Plus, Pencil, Trash2, X,
-  BookOpen, FileText, ClipboardList, ArrowLeft, Layers,
+  BookOpen, FileText, ClipboardList, ArrowLeft, Layers, ListTodo,
 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
@@ -14,6 +14,8 @@ import ConfirmDialog from '../../../components/ConfirmDialog';
 import { moduleSchema, type ModuleFields } from '../../../schemas/moduleSchema';
 import { lectureSchema, contentTypeValues, lessonStatusValues, type LectureFields } from '../../../schemas/lectureSchema';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import { useAppStore } from '../../../store/login';
+import { canManageCourses } from '../../../lib/permissions';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -155,14 +157,15 @@ const LessonModal: React.FC<{
     setConfirm({
       msg: lesson ? `Update "${lesson.title}"?` : `Add lesson "${data.title}"?`,
       fn: async () => {
+        const isAssignment = data.contentType === 'ASSIGNMENT';
         if (lesson) {
           const payload: UpdateLessonPayload = {
             contentType:              data.contentType,
             title:                    data.title,
             description:              data.description,
             lectureStatus:            data.status,
-            estimatedDurationMinutes: data.contentType === 'LECTURE'    ? (data.estimatedDurationMinutes ?? null) : null,
-            maxMarks:                 data.contentType === 'ASSIGNMENT' ? (data.maxMarks ?? null) : null,
+            estimatedDurationMinutes: !isAssignment ? (data.estimatedDurationMinutes ?? null) : null,
+            maxMarks:                 isAssignment   ? (data.maxMarks ?? null) : null,
           };
           await updateLesson(lesson.id, moduleId, payload);
         } else {
@@ -171,8 +174,8 @@ const LessonModal: React.FC<{
             title:        data.title,
             description:  data.description,
             lectureStatus: data.status,
-            ...(data.contentType === 'LECTURE'    && data.estimatedDurationMinutes ? { estimatedDurationMinutes: data.estimatedDurationMinutes } : {}),
-            ...(data.contentType === 'ASSIGNMENT' && data.maxMarks !== null ? { maxMarks: data.maxMarks ?? undefined } : {}),
+            ...(!isAssignment && data.estimatedDurationMinutes ? { estimatedDurationMinutes: data.estimatedDurationMinutes } : {}),
+            ...(isAssignment && data.maxMarks !== null ? { maxMarks: data.maxMarks ?? undefined } : {}),
           };
           await addLesson(moduleId, payload);
         }
@@ -223,7 +226,9 @@ const LessonModal: React.FC<{
                             ? 'bg-[#001D6E] text-white border-[#001D6E]'
                             : 'border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700'
                         }`}>
-                        {t === 'LECTURE' ? <FileText className="h-3.5 w-3.5" /> : <ClipboardList className="h-3.5 w-3.5" />}
+                        {t === 'LECTURE' ? <FileText className="h-3.5 w-3.5" />
+                          : t === 'TASK'  ? <ListTodo className="h-3.5 w-3.5" />
+                          : <ClipboardList className="h-3.5 w-3.5" />}
                         {t.charAt(0) + t.slice(1).toLowerCase()}
                       </button>
                     ))}
@@ -267,8 +272,8 @@ const LessonModal: React.FC<{
               />
             </div>
 
-            {/* Conditional: LECTURE → duration */}
-            {contentType === 'LECTURE' && (
+            {/* Conditional: LECTURE / TASK → duration */}
+            {contentType !== 'ASSIGNMENT' && (
               <div>
                 <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">Duration (minutes) <span className="text-slate-300">(optional)</span></label>
                 <input
@@ -326,7 +331,7 @@ const LessonModal: React.FC<{
 
 // ── Module Row ────────────────────────────────────────────────────────────────
 
-const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index }) => {
+const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean }> = ({ mod, index, canManage }) => {
   const { lessons, fetchLessons } = useAdminStore();
   const [expanded, setExpanded]       = useState(false);
   const [editModule, setEditModule]   = useState(false);
@@ -364,10 +369,12 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index 
             <Layers className="h-3 w-3" />
             {mod.lectureCount} lesson{mod.lectureCount !== 1 ? 's' : ''}
           </div>
-          <button onClick={() => setEditModule(true)}
-            className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
-            <Pencil className="h-3 w-3" /> Edit
-          </button>
+          {canManage && (
+            <button onClick={() => setEditModule(true)}
+              className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
+              <Pencil className="h-3 w-3" /> Edit
+            </button>
+          )}
         </div>
       </div>
 
@@ -403,9 +410,11 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index 
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${
                           lesson.contentType === 'ASSIGNMENT'
                             ? 'bg-purple-50 text-purple-700 border-purple-100'
+                            : lesson.contentType === 'TASK'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
                             : 'bg-blue-50 text-blue-700 border-blue-100'
                         }`}>
-                          {lesson.contentType === 'ASSIGNMENT' ? 'Assignment' : 'Lecture'}
+                          {lesson.contentType === 'ASSIGNMENT' ? 'Assignment' : lesson.contentType === 'TASK' ? 'Task' : 'Lecture'}
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 hidden md:table-cell">
@@ -414,10 +423,12 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index 
                         </span>
                       </td>
                       <td className="py-2.5 text-right">
-                        <button onClick={() => setEditLesson(lesson)}
-                          className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1 ml-auto">
-                          <Pencil className="h-3 w-3" /> Edit
-                        </button>
+                        {canManage && (
+                          <button onClick={() => setEditLesson(lesson)}
+                            className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1 ml-auto">
+                            <Pencil className="h-3 w-3" /> Edit
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -425,10 +436,12 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index 
               </tbody>
             </table>
           )}
-          <button onClick={() => setAddLesson(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
-            <Plus className="h-3.5 w-3.5" /> Add Lesson
-          </button>
+          {canManage && (
+            <button onClick={() => setAddLesson(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
+              <Plus className="h-3.5 w-3.5" /> Add Lesson
+            </button>
+          )}
         </div>
       )}
 
@@ -443,6 +456,8 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number }> = ({ mod, index 
 
 const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   const { selectedCourseId, courses, modules, modulesLoading, fetchModules } = useAdminStore();
+  const { currentUser } = useAppStore();
+  const canManage = canManageCourses(currentUser?.email);
   const [showAddModule, setShowAddModule] = useState(false);
 
   const course = courses.find((c) => c.id === selectedCourseId);
@@ -491,12 +506,14 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setShowAddModule(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
-              >
-                <Plus className="h-4 w-4" /> New Module
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => setShowAddModule(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
+                >
+                  <Plus className="h-4 w-4" /> New Module
+                </button>
+              )}
             </div>
 
             {/* Stats bar */}
@@ -525,7 +542,7 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
             ) : (
               <div className="space-y-3">
                 {modules.map((mod, i) => (
-                  <ModuleRow key={mod.id} mod={mod} index={i} />
+                  <ModuleRow key={mod.id} mod={mod} index={i} canManage={canManage} />
                 ))}
               </div>
             )}

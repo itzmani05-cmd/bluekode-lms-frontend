@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException} from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { FormStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
@@ -49,13 +54,11 @@ export class StudentProfilesService {
     const isStudent = user.userRoles.some(
       (ur) => ur.role.role_name.toLowerCase() === 'student',
     );
-    if(!isStudent) 
-    {
+    if (!isStudent) {
       const studentRole = await this.prisma.role.findFirst({
         where: { role_name: { equals: 'student', mode: 'insensitive' } },
       });
-      if(!studentRole) 
-      {
+      if (!studentRole) {
         throw new BadRequestException(
           "No 'Student' role found in the system. Please contact a system administrator.",
         );
@@ -65,7 +68,7 @@ export class StudentProfilesService {
       });
     }
     await this.ensureInstitutionExists(dto.institutionId);
-    
+
     try {
       const profile = await this.prisma.studentProfile.create({
         data: {
@@ -79,12 +82,11 @@ export class StudentProfilesService {
         select: STUDENT_PROFILE_SELECT,
       });
       return { success: true, data: profile };
-    } 
-    catch (e) {
-      if(
+    } catch (e) {
+      if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2002'
-      ){
+      ) {
         throw new ConflictException('This user already has a student profile');
       }
       throw e;
@@ -118,14 +120,14 @@ export class StudentProfilesService {
       this.prisma.studentProfile.count({ where }),
     ]);
 
-    return{
+    return {
       success: true,
       data,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  async findOne(id: number){
+  async findOne(id: number) {
     const profile = await this.prisma.studentProfile.findFirst({
       where: { student_profile_id: id },
       select: STUDENT_PROFILE_SELECT,

@@ -6,9 +6,7 @@ import {
   Lock,
   BookOpen,
   Clock,
-  Paperclip,
   Send,
-  X,
   FileText,
   AlertCircle,
   CheckCircle,
@@ -58,7 +56,6 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
 
   // Submission form state
   const [submissionText, setSubmissionText] = useState('');
-  const [attachedFiles, setAttachedFiles]   = useState<string[]>([]);
   const [showForm, setShowForm]             = useState(false);
   const [submitting, setSubmitting]         = useState(false);
 
@@ -98,7 +95,6 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
       setProgress([]);
       setSubmissions([]);
       setSubmissionText('');
-      setAttachedFiles([]);
 
       try {
         const mods = await fetchModulesForCourse(selectedCourseId);
@@ -173,7 +169,6 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
     setFormResetForLessonId(selectedLesson.id);
     setShowForm(false);
     setSubmissionText('');
-    setAttachedFiles([]);
   }
 
   const handleMarkViewed = async () => {
@@ -190,15 +185,9 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
     }
   };
 
-  const handleFileAttach = () => {
-    const fakeFiles = ['document.pdf', 'submission.docx', 'data.xlsx'];
-    const unused = fakeFiles.filter((f) => !attachedFiles.includes(f));
-    if (unused.length) setAttachedFiles((prev) => [...prev, unused[0]]);
-  };
-
   const handleSubmit = async () => {
     if (!selectedLesson || !selectedEnrollmentId || submitting) return;
-    if (!submissionText.trim() && !attachedFiles.length) return;
+    if (!submissionText.trim()) return;
     setSubmitting(true);
     try {
       await submitAssignment(selectedEnrollmentId, selectedLesson.id, {
@@ -208,7 +197,6 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
       setSubmissions(updated);
       setShowForm(false);
       setSubmissionText('');
-      setAttachedFiles([]);
     } catch {
       setCurrError('Failed to submit assignment. Please try again.');
     } finally {
@@ -303,7 +291,7 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                     <div className="relative">
                       <div className="flex items-center gap-2 mb-3 flex-wrap">
                         <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded-lg text-[10px] font-extrabold text-white/90 uppercase tracking-wider">
-                          {selectedLesson.contentType === 'ASSIGNMENT' ? 'Assignment' : 'Lecture'}
+                          {selectedLesson.contentType === 'ASSIGNMENT' ? 'Assignment' : selectedLesson.contentType === 'TASK' ? 'Task' : 'Lecture'}
                         </span>
                         {selectedLesson.dueDate && (
                           <span className="px-2.5 py-1 bg-red-500/80 border border-red-400/30 rounded-lg text-[10px] font-extrabold text-white uppercase tracking-wider">
@@ -344,8 +332,15 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                       </div>
                     )}
 
-                    {/* PDF link */}
-                    {selectedLesson.pdfUrl && (
+                    {/* Lesson content */}
+                    {selectedLesson.content && (
+                      <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        <p className="text-sm">{selectedLesson.content}</p>
+                      </div>
+                    )}
+
+                    {/* PDF link (not applicable to assignments) */}
+                    {selectedLesson.pdfUrl && selectedLesson.contentType !== 'ASSIGNMENT' && (
                       <a
                         href={selectedLesson.pdfUrl}
                         target="_blank"
@@ -379,41 +374,14 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                               className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-none transition-all leading-relaxed"
                             />
 
-                            {attachedFiles.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {attachedFiles.map((file) => (
-                                  <div
-                                    key={file}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs font-semibold text-blue-700"
-                                  >
-                                    <FileText className="h-3.5 w-3.5 text-blue-500" />
-                                    <span>{file}</span>
-                                    <button
-                                      onClick={() => setAttachedFiles((prev) => prev.filter((f) => f !== file))}
-                                      className="text-blue-400 hover:text-blue-700 ml-1"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="flex items-center justify-between pt-2">
-                              <button
-                                onClick={handleFileAttach}
-                                className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all"
-                              >
-                                <Paperclip className="h-3.5 w-3.5" />
-                                Attach File
-                              </button>
+                            <div className="flex items-center justify-end pt-2">
                               <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-semibold text-slate-400">
                                   {submissionText.length} / 5000 chars
                                 </span>
                                 <button
                                   onClick={handleSubmit}
-                                  disabled={submitting || (!submissionText.trim() && !attachedFiles.length)}
+                                  disabled={submitting || !submissionText.trim()}
                                   className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold rounded-xl transition-all shadow-sm shadow-blue-500/20 disabled:shadow-none"
                                 >
                                   <Send className="h-3.5 w-3.5" />
@@ -477,21 +445,6 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                             </div>
                           </div>
                         )}
-
-                        {/* Guidelines */}
-                        <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                          <div className="text-xs text-amber-800 space-y-1">
-                            <p className="font-extrabold">Submission Guidelines</p>
-                            <ul className="list-disc list-inside space-y-0.5 font-medium opacity-90">
-                              <li>Accepted formats: PDF, DOCX, TXT</li>
-                              <li>Maximum file size: 10 MB per attachment</li>
-                              {selectedLesson.maxMarks && (
-                                <li>Maximum marks: {selectedLesson.maxMarks}</li>
-                              )}
-                            </ul>
-                          </div>
-                        </div>
                       </>
                     )}
 
@@ -627,7 +580,7 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                                   {lesson.title}
                                 </p>
                                 <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                  {lesson.contentType === 'ASSIGNMENT' ? 'Assignment' : 'Lecture'}
+                                  {lesson.contentType === 'ASSIGNMENT' ? 'Assignment' : lesson.contentType === 'TASK' ? 'Task' : 'Lecture'}
                                   {lesson.estimatedDurationMinutes
                                     ? ` • ${lesson.estimatedDurationMinutes} min`
                                     : ''}

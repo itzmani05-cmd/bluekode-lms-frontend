@@ -1,6 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateModuleDto {
   @ApiProperty({ example: 'Introduction to React' })
@@ -14,7 +21,9 @@ export class CreateModuleDto {
   @IsString()
   moduleDescription?: string;
 
-  @ApiPropertyOptional({ description: 'Display order (auto-assigned if omitted)' })
+  @ApiPropertyOptional({
+    description: 'Display order (auto-assigned if omitted)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

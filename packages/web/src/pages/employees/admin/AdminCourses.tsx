@@ -10,6 +10,8 @@ import type { Course, CourseStatus } from '../../../store/Admin';
 import { courseSchema, courseStatusValues, type CourseFields } from '../../../schemas/courseSchema';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import { useAppStore } from '../../../store/login';
+import { canManageCourses } from '../../../lib/permissions';
 
 const statusCfg: Record<CourseStatus, { label: string; className: string }> = {
   ACTIVE:   { label: 'Active',   className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
@@ -215,6 +217,8 @@ const EditCourseModal: React.FC<EditModalProps> = ({ course, onClose }) => {
 const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('Courses');
   const { courses, isLoading, fetchCourses, setSelectedCourseId, courseSearchQuery, courseStatusFilter, setCourseSearchQuery, setCourseStatusFilter } = useAdminStore();
+  const { currentUser } = useAppStore();
+  const canManage = canManageCourses(currentUser?.email);
   const [showAddModal, setShowModal] = useState(false);
   const [editingCourse, setEditing]  = useState<Course | null>(null);
 
@@ -253,9 +257,11 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
                 <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Courses</h1>
                 <p className="text-sm text-slate-500 mt-1">{courses.length} courses · {totalEnrollments} total enrollments.</p>
               </div>
-              <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0">
-                <Plus className="h-4 w-4" /> New Course
-              </button>
+              {canManage && (
+                <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0">
+                  <Plus className="h-4 w-4" /> New Course
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -358,9 +364,11 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
                               >
                                 <Settings2 className="h-3 w-3" />Manage
                               </button>
-                              <button onClick={() => setEditing(course)} className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
-                                <Pencil className="h-3 w-3" />Edit
-                              </button>
+                              {canManage && (
+                                <button onClick={() => setEditing(course)} className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
+                                  <Pencil className="h-3 w-3" />Edit
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

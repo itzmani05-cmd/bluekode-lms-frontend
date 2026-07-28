@@ -55,7 +55,7 @@ export type { TrainerAssignmentSummary, TrainerAssignmentType, CreateTrainerAssi
 
 //Shared types
 
-export type ContentType  = 'LECTURE' | 'ASSIGNMENT';
+export type ContentType  = 'LECTURE' | 'TASK' | 'ASSIGNMENT';
 export type LessonStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export type { CourseModule, Lesson, CreateLessonPayload, UpdateLessonPayload };
