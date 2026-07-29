@@ -5,7 +5,6 @@ import {
   ChevronLeft, ChevronRight, UserCheck,
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
-import logo from '../../assests/logo.jpeg';
 
 export type AdminViewType =
   | 'admin-dashboard'

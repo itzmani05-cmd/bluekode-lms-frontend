@@ -16,7 +16,7 @@ interface NotificationsState {
   markAllRead:  () => Promise<void>;
 }
 
-export const useNotificationsStore = create<NotificationsState>((set, get) => ({
+export const useNotificationsStore = create<NotificationsState>((set) => ({
   notifications: [],
   unreadCount:   0,
   loading:       false,

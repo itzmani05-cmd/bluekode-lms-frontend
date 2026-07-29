@@ -4,7 +4,6 @@ import {
   BookOpen, Settings, LogOut, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
-import logo from '../../assests/logo.jpeg';
 
 export type TrainerViewType =
   | 'trainer-dashboard'

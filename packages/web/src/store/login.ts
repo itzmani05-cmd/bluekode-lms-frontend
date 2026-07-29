@@ -121,7 +121,7 @@ export const useAppStore = create<AuthState>()(
     {
       name: 'bluekode_auth',
       partialize: (state) => ({
-        currentUser:     state.currentUser,
+        currentUser:     state.currentUser ?? undefined,
         isAuthenticated: state.isAuthenticated,
       }),
       // migrate persisted state: add accountStatus if missing

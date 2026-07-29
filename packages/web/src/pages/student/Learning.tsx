@@ -24,7 +24,12 @@ import type { Lesson } from '../../lib/api/lectures';
 import type { LectureProgress } from '../../lib/api/progress';
 import type { LectureSubmission } from '../../lib/api/submissions';
 
-type ViewType = 'dashboard' | 'courses' | 'assignments' | 'learning';
+type ViewType =
+  | 'dashboard'
+  | 'courses'
+  | 'assignments'
+  | 'learning'
+  | 'settings';
 
 interface DbModule extends CourseModule {
   lessons: Lesson[];
@@ -208,9 +213,15 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
   if (!selectedCourseId) {
     return (
       <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
-        <Header activeTab="courses" onViewChange={onViewChange as (view: 'dashboard' | 'courses' | 'assignments') => void} />
+       <Header
+          activeTab="courses"
+          onViewChange={onViewChange}
+        />
         <div className="flex-1 flex overflow-hidden">
-          <Sidebar activeTab="courses" onViewChange={onViewChange as (view: 'dashboard' | 'courses' | 'assignments') => void} />
+          <Sidebar
+            activeTab="courses"
+            onViewChange={onViewChange}
+          />
           <div className="flex-1 flex items-center justify-center text-center p-8">
             <div>
               <BookOpen className="h-10 w-10 text-slate-200 mx-auto mb-3" />
@@ -230,10 +241,16 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F8FAFC] overflow-hidden">
-      <Header activeTab="courses" onViewChange={onViewChange as (view: 'dashboard' | 'courses' | 'assignments') => void} />
+      <Header
+        activeTab="courses"
+        onViewChange={onViewChange}
+      />
 
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar activeTab="courses" onViewChange={onViewChange as (view: 'dashboard' | 'courses' | 'assignments') => void} />
+       <Sidebar
+        activeTab="courses"
+        onViewChange={onViewChange}
+      />
 
         <div className="flex-1 flex overflow-hidden min-w-0">
 

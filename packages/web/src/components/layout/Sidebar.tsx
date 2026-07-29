@@ -9,7 +9,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
-import logo from '../../assests/logo.jpeg';
 
 interface SidebarProps {
   activeTab: 'dashboard' | 'courses' | 'assignments' | 'learning' | 'settings';
