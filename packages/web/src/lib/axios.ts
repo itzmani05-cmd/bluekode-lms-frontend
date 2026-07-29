@@ -16,6 +16,7 @@ export const clearAuthToken = () => {
 
 const api = axios.create({
   baseURL: 'https://bluekode-lms-backend.vercel.app',
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
