@@ -4,6 +4,7 @@ import {
   BookOpen, Settings, LogOut, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '../../store/login';
+import { canManageCourses } from '../../lib/permissions';
 
 export type TrainerViewType =
   | 'trainer-dashboard'
@@ -17,7 +18,7 @@ interface TrainerSidebarProps {
   onViewChange?: (view: TrainerViewType) => void;
 }
 
-const navItems: { key: TrainerViewType; label: string; Icon: React.ElementType }[] = [
+const allNavItems: { key: TrainerViewType; label: string; Icon: React.ElementType }[] = [
   { key: 'trainer-dashboard',   label: 'Dashboard',   Icon: LayoutDashboard },
   { key: 'trainer-submissions', label: 'Submissions',  Icon: ClipboardList   },
   { key: 'trainer-students',    label: 'My Students',  Icon: GraduationCap   },
@@ -26,6 +27,11 @@ const navItems: { key: TrainerViewType; label: string; Icon: React.ElementType }
 
 const TrainerSidebar: React.FC<TrainerSidebarProps> = ({ activeTab, onViewChange }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { currentUser } = useAppStore();
+  const coursesOnly = canManageCourses(currentUser?.email);
+  const navItems = coursesOnly
+    ? allNavItems.filter((item) => item.key === 'trainer-courses')
+    : allNavItems;
 
   const handleLogout = () => {
     useAppStore.getState().logout();
@@ -83,22 +89,24 @@ const TrainerSidebar: React.FC<TrainerSidebarProps> = ({ activeTab, onViewChange
       </div>
 
       <div className="p-3 border-t border-white/10 space-y-1.5">
-        <button
-          onClick={() => onViewChange?.('trainer-settings')}
-          title={collapsed ? 'Settings' : undefined}
-          className={`
-            w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
-            transition-all duration-200
-            ${activeTab === 'trainer-settings'
-              ? 'bg-white/10 text-white shadow-sm border border-white/5'
-              : 'text-white/70 hover:bg-white/5 hover:text-white'
-            }
-            ${collapsed ? 'justify-center' : ''}
-          `}
-        >
-          <Settings className="h-4 w-4 shrink-0" />
-          {!collapsed && <span className="whitespace-nowrap">Settings</span>}
-        </button>
+        {!coursesOnly && (
+          <button
+            onClick={() => onViewChange?.('trainer-settings')}
+            title={collapsed ? 'Settings' : undefined}
+            className={`
+              w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
+              transition-all duration-200
+              ${activeTab === 'trainer-settings'
+                ? 'bg-white/10 text-white shadow-sm border border-white/5'
+                : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }
+              ${collapsed ? 'justify-center' : ''}
+            `}
+          >
+            <Settings className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="whitespace-nowrap">Settings</span>}
+          </button>
+        )}
 
         <button
           onClick={handleLogout}

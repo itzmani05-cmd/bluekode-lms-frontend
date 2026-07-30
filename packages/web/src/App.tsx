@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from './store/login';
+import { canManageCourses } from './lib/permissions';
 import Login            from './pages/auth/Login';
 import ChangePassword   from './pages/auth/ChangePassword';
 import CompleteProfile  from './pages/auth/CompleteProfile';
@@ -71,6 +72,7 @@ function App() {
     }
 
     if (currentUser.role === 'trainer') {
+      if (canManageCourses(currentUser.email)) return <TrainerCourses onViewChange={setTrainerView} />;
       if (trainerView === 'trainer-submissions') return <TrainerSubmissions onViewChange={setTrainerView} />;
       if (trainerView === 'trainer-students')    return <TrainerStudents    onViewChange={setTrainerView} />;
       if (trainerView === 'trainer-courses')     return <TrainerCourses     onViewChange={setTrainerView} />;

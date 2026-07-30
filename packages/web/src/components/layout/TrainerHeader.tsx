@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, HelpCircle, Menu, X, LayoutDashboard, ClipboardList, GraduationCap, BookOpen, Settings, Info, CheckCheck } from 'lucide-react';
 import { useAppStore } from '../../store/login';
 import { useNotificationsStore } from '../../store/notifications';
+import { canManageCourses } from '../../lib/permissions';
 import type { TrainerViewType } from './TrainerSidebar';
 import logo from '../../assests/logo.jpeg';
 import LearnMoreModal from './LearnMoreModal';
@@ -11,7 +12,7 @@ interface TrainerHeaderProps {
   onViewChange?: (view: TrainerViewType) => void;
 }
 
-const navItems: { key: TrainerViewType; label: string; Icon: React.ElementType }[] = [
+const allNavItems: { key: TrainerViewType; label: string; Icon: React.ElementType }[] = [
   { key: 'trainer-dashboard',   label: 'Dashboard',  Icon: LayoutDashboard },
   { key: 'trainer-submissions', label: 'Submissions', Icon: ClipboardList   },
   { key: 'trainer-students',    label: 'My Students', Icon: GraduationCap   },
@@ -25,6 +26,9 @@ const TrainerHeader = ({ activeTab, onViewChange }: TrainerHeaderProps) => {
   const [learnMoreOpen,   setLearnMoreOpen]   = useState(false);
 
   const { currentUser } = useAppStore();
+  const navItems = canManageCourses(currentUser?.email)
+    ? allNavItems.filter((item) => item.key === 'trainer-courses')
+    : allNavItems;
   const { notifications, unreadCount, fetch, markRead, markAllRead } = useNotificationsStore();
 
   const menuRef  = useRef<HTMLDivElement>(null);

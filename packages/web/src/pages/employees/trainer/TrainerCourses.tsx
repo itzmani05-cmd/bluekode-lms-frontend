@@ -15,7 +15,7 @@ import { useAppStore } from '../../../store/login';
 import { fetchMyEmployeeProfile } from '../../../lib/api/employees';
 import { fetchAssignmentsByTrainerApi } from '../../../lib/api/trainerAssignments';
 import {
-  fetchCourseByIdApi, createCourseApi, updateCourseApi, deleteCourseApi, type CourseDetail,
+  fetchCourses, fetchCourseByIdApi, createCourseApi, updateCourseApi, deleteCourseApi, type CourseDetail,
 } from '../../../lib/api/courses';
 import {
   fetchModulesApi, createModuleApi, updateModuleApi, deleteModuleApi,
@@ -592,47 +592,55 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
     setLoading(true);
     setFetchError(null);
 
-    fetchMyEmployeeProfile(currentUser.user_id)
-      .then(async (profile) => {
-        const assignments = await fetchAssignmentsByTrainerApi(profile.id);
+    const buildModules = async (courseId: number): Promise<TrainerModule[]> => {
+      const modules = await fetchModulesApi(courseId);
+      const sorted  = [...modules].sort((a, b) => a.order - b.order);
+      return Promise.all(
+        sorted.map(async (mod) => ({
+          module_id:          mod.id,
+          course_id:          courseId,
+          module_name:        mod.name,
+          module_description: mod.description,
+          module_order:       mod.order,
+          lectures:           await fetchLecturesApi(mod.id),
+        })),
+      );
+    };
 
-        // Deduplicate courses from trainer assignments
-        const courseMap = new Map<number, number>();
-        for (const a of assignments) {
-          courseMap.set(a.course.course_id, a.course.course_id);
-        }
-        const uniqueCourseIds = Array.from(courseMap.keys());
+    if (canManage) {
+      // trainer@company.com sees every course in the system
+      fetchCourses()
+        .then(async (all) => {
+          const coursesData = await Promise.all(
+            all.map(async (course) => ({ ...course, modules: await buildModules(course.id) })),
+          );
+          setCourses(coursesData);
+          if (coursesData.length > 0) setExpandedCourse(coursesData[0].id);
+        })
+        .catch(() => setFetchError('Could not load courses. Please try again.'))
+        .finally(() => setLoading(false));
+    } else {
+      fetchMyEmployeeProfile(currentUser.user_id)
+        .then(async (profile) => {
+          const assignments = await fetchAssignmentsByTrainerApi(profile.id);
 
-        // Fetch detail + modules for every unique course in parallel
-        const coursesData = await Promise.all(
-          uniqueCourseIds.map(async (courseId) => {
-            const [detail, modules] = await Promise.all([
-              fetchCourseByIdApi(courseId),
-              fetchModulesApi(courseId),
-            ]);
+          const courseMap = new Map<number, number>();
+          for (const a of assignments) courseMap.set(a.course.course_id, a.course.course_id);
+          const uniqueCourseIds = Array.from(courseMap.keys());
 
-            const sortedModules = [...modules].sort((a, b) => a.order - b.order);
+          const coursesData = await Promise.all(
+            uniqueCourseIds.map(async (courseId) => {
+              const detail = await fetchCourseByIdApi(courseId);
+              return { ...detail, modules: await buildModules(courseId) };
+            }),
+          );
 
-            const modulesWithLectures: TrainerModule[] = await Promise.all(
-              sortedModules.map(async (mod) => ({
-                module_id:          mod.id,
-                course_id:          courseId,
-                module_name:        mod.name,
-                module_description: mod.description,
-                module_order:       mod.order,
-                lectures:           await fetchLecturesApi(mod.id),
-              })),
-            );
-
-            return { ...detail, modules: modulesWithLectures };
-          }),
-        );
-
-        setCourses(coursesData);
-        if (coursesData.length > 0) setExpandedCourse(coursesData[0].id);
-      })
-      .catch(() => setFetchError('Could not load your courses. Please try again.'))
-      .finally(() => setLoading(false));
+          setCourses(coursesData);
+          if (coursesData.length > 0) setExpandedCourse(coursesData[0].id);
+        })
+        .catch(() => setFetchError('Could not load your courses. Please try again.'))
+        .finally(() => setLoading(false));
+    }
   }, [currentUser?.user_id]);
 
   const refreshModuleLectures = async (moduleId: number) => {
