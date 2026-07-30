@@ -29,9 +29,20 @@ type StudentViewType = 'dashboard' | 'courses' | 'assignments' | 'learning' | 's
 
 function App() {
   const { isAuthenticated, currentUser } = useAppStore();
-  const [studentView, setStudentView] = useState<StudentViewType>('dashboard');
-  const [adminView, setAdminView]     = useState<AdminViewType>('admin-dashboard');
-  const [trainerView, setTrainerView] = useState<TrainerViewType>('trainer-dashboard');
+
+  const [studentView, _setStudentView] = useState<StudentViewType>(
+    () => (localStorage.getItem('bk_studentView') as StudentViewType) ?? 'dashboard',
+  );
+  const [adminView, _setAdminView] = useState<AdminViewType>(
+    () => (localStorage.getItem('bk_adminView') as AdminViewType) ?? 'admin-dashboard',
+  );
+  const [trainerView, _setTrainerView] = useState<TrainerViewType>(
+    () => (localStorage.getItem('bk_trainerView') as TrainerViewType) ?? 'trainer-dashboard',
+  );
+
+  const setStudentView  = (v: StudentViewType)  => { localStorage.setItem('bk_studentView',  v); _setStudentView(v);  };
+  const setAdminView    = (v: AdminViewType)    => { localStorage.setItem('bk_adminView',    v); _setAdminView(v);    };
+  const setTrainerView  = (v: TrainerViewType)  => { localStorage.setItem('bk_trainerView',  v); _setTrainerView(v);  };
 
   if (isAuthenticated && currentUser) {
 

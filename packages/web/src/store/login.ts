@@ -113,6 +113,9 @@ export const useAppStore = create<AuthState>()(
       logout: () => {
         clearAuthToken();
         useStudentStore.getState().resetStudentStore();
+        localStorage.removeItem('bk_studentView');
+        localStorage.removeItem('bk_adminView');
+        localStorage.removeItem('bk_trainerView');
         set({ currentUser: null, isAuthenticated: false, error: null, successMsg: null });
       },
 
