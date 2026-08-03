@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   BookOpen, ChevronDown, ChevronUp, ClipboardList,
   FileText, ListTodo, AlertTriangle, RefreshCw,
-  Plus, Pencil, Trash2, X,
+  Plus, Pencil, Trash2, X, Eye,
 } from 'lucide-react';
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import LectureDetailDrawer from '../../../components/LectureDetailDrawer';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import { useAppStore } from '../../../store/login';
 import { fetchMyEmployeeProfile } from '../../../lib/api/employees';
@@ -581,6 +582,7 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
 
   const [addLessonModuleId, setAddLessonModuleId] = useState<number | null>(null);
   const [editLesson,        setEditLesson]        = useState<Lesson | null>(null);
+  const [viewLesson,        setViewLesson]        = useState<Lesson | null>(null);
 
   const [showAddCourse, setShowAddCourse]           = useState(false);
   const [editingCourse, setEditingCourse]           = useState<TrainerCourse | null>(null);
@@ -887,7 +889,14 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
                                             ? assignmentStatusCfg[lec.assignmentStatus as AssignmentStatus]
                                             : null;
                                           return (
-                                            <div key={lec.id} className="flex items-center gap-4 px-8 py-3.5">
+                                            <div
+                                              key={lec.id}
+                                              role="button"
+                                              tabIndex={0}
+                                              onClick={() => setViewLesson(lec)}
+                                              onKeyDown={(e) => { if (e.key === 'Enter') setViewLesson(lec); }}
+                                              className="flex items-center gap-4 px-8 py-3.5 cursor-pointer hover:bg-slate-50/60 transition-colors"
+                                            >
                                               <div className={`p-1.5 rounded-lg shrink-0 ${typeCfg.iconCls}`}>
                                                 <Icon className="h-3.5 w-3.5" />
                                               </div>
@@ -904,9 +913,15 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
                                                   {asCfg.label}
                                                 </span>
                                               )}
+                                              <button
+                                                onClick={(e) => { e.stopPropagation(); setViewLesson(lec); }}
+                                                className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1 shrink-0"
+                                              >
+                                                <Eye className="h-3 w-3" /> View
+                                              </button>
                                               {canManage && (
                                                 <button
-                                                  onClick={() => setEditLesson(lec)}
+                                                  onClick={(e) => { e.stopPropagation(); setEditLesson(lec); }}
                                                   className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1 shrink-0"
                                                 >
                                                   <Pencil className="h-3 w-3" /> Edit
@@ -992,6 +1007,14 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
           lesson={editLesson}
           onSaved={refreshModuleLectures}
           onClose={() => setEditLesson(null)}
+        />
+      )}
+      {viewLesson && (
+        <LectureDetailDrawer
+          lectureId={viewLesson.id}
+          courseName={courses.find((c) => c.modules.some((m) => m.module_id === viewLesson.moduleId))?.name}
+          moduleName={courses.flatMap((c) => c.modules).find((m) => m.module_id === viewLesson.moduleId)?.module_name}
+          onClose={() => setViewLesson(null)}
         />
       )}
     </div>

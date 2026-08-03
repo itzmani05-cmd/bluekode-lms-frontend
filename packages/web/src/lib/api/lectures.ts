@@ -15,7 +15,10 @@ interface ApiLecture {
   due_date:                   string | null;
   max_marks:                  number | null;
   assignment_status:          string | null;
+  late_submission_allowed:    boolean;
+  late_submission_deadline:   string | null;
   created_at:                 string;
+  updated_at:                 string;
 }
 
 export interface Lesson {
@@ -32,6 +35,10 @@ export interface Lesson {
   dueDate:                  string | null;
   maxMarks:                 number | null;
   assignmentStatus:         string | null;
+  lateSubmissionAllowed:    boolean;
+  lateSubmissionDeadline:   string | null;
+  createdAt:                string;
+  updatedAt:                string;
 }
 
 const mapLecture = (l: ApiLecture): Lesson => ({
@@ -48,6 +55,10 @@ const mapLecture = (l: ApiLecture): Lesson => ({
   dueDate:                  l.due_date ? l.due_date.split('T')[0] : null,
   maxMarks:                 l.max_marks,
   assignmentStatus:         l.assignment_status,
+  lateSubmissionAllowed:    l.late_submission_allowed,
+  lateSubmissionDeadline:   l.late_submission_deadline,
+  createdAt:                l.created_at,
+  updatedAt:                l.updated_at,
 });
 
 export interface CreateLessonPayload {
@@ -77,6 +88,10 @@ export interface UpdateLessonPayload {
 export const fetchLecturesApi = (moduleId: number) =>
   api.get<{ data: ApiLecture[] }>(`/modules/${moduleId}/lectures`)
     .then((r) => r.data.data.map(mapLecture));
+
+export const fetchLectureByIdApi = (id: number) =>
+  api.get<{ data: ApiLecture }>(`/lectures/${id}`)
+    .then((r) => mapLecture(r.data.data));
 
 export const createLectureApi = (moduleId: number, payload: CreateLessonPayload) =>
   api.post(`/modules/${moduleId}/lectures`, payload).then((r) => r.data);

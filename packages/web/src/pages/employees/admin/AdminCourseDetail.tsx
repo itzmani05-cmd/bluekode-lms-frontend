@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  ChevronDown, ChevronRight, Plus, Pencil, Trash2, X,
+  ChevronDown, ChevronRight, Plus, Pencil, Trash2, X, Eye,
   BookOpen, FileText, ClipboardList, ArrowLeft, Layers, ListTodo,
 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
@@ -11,6 +11,7 @@ import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import { useAdminStore } from '../../../store/Admin';
 import type { CourseModule, Lesson, CreateLessonPayload, UpdateLessonPayload } from '../../../store/Admin';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import LectureDetailDrawer from '../../../components/LectureDetailDrawer';
 import { moduleSchema, type ModuleFields } from '../../../schemas/moduleSchema';
 import { lectureSchema, contentTypeValues, lessonStatusValues, type LectureFields } from '../../../schemas/lectureSchema';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
@@ -331,12 +332,13 @@ const LessonModal: React.FC<{
 
 // ── Module Row ────────────────────────────────────────────────────────────────
 
-const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean }> = ({ mod, index, canManage }) => {
+const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean; courseName?: string }> = ({ mod, index, canManage, courseName }) => {
   const { lessons, fetchLessons } = useAdminStore();
   const [expanded, setExpanded]       = useState(false);
   const [editModule, setEditModule]   = useState(false);
   const [addLesson, setAddLesson]     = useState(false);
   const [editLesson, setEditLesson]   = useState<Lesson | null>(null);
+  const [viewLesson, setViewLesson]   = useState<Lesson | null>(null);
 
   const modLessons = lessons[mod.id] ?? [];
   const loaded     = mod.id in lessons;
@@ -398,7 +400,11 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean
                 {modLessons.map((lesson, li) => {
                   const sCfg = statusCfg[lesson.status];
                   return (
-                    <tr key={lesson.id} className="hover:bg-white transition-colors">
+                    <tr
+                      key={lesson.id}
+                      onClick={() => setViewLesson(lesson)}
+                      className="hover:bg-white cursor-pointer transition-colors"
+                    >
                       <td className="py-2.5 pr-3 text-[11px] font-bold text-slate-400">{li + 1}</td>
                       <td className="py-2.5 pr-4">
                         <p className="text-xs font-bold text-slate-800">{lesson.title}</p>
@@ -423,12 +429,20 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean
                         </span>
                       </td>
                       <td className="py-2.5 text-right">
-                        {canManage && (
-                          <button onClick={() => setEditLesson(lesson)}
-                            className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1 ml-auto">
-                            <Pencil className="h-3 w-3" /> Edit
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setViewLesson(lesson); }}
+                            className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1"
+                          >
+                            <Eye className="h-3 w-3" /> View
                           </button>
-                        )}
+                          {canManage && (
+                            <button onClick={(e) => { e.stopPropagation(); setEditLesson(lesson); }}
+                              className="px-2.5 py-1 rounded-lg bg-white text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1">
+                              <Pencil className="h-3 w-3" /> Edit
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -448,6 +462,14 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean
       {editModule  && <ModuleModal courseId={mod.courseId} module={mod} onClose={() => setEditModule(false)} />}
       {addLesson   && <LessonModal moduleId={mod.id} onClose={() => setAddLesson(false)} />}
       {editLesson  && <LessonModal moduleId={mod.id} lesson={editLesson} onClose={() => setEditLesson(null)} />}
+      {viewLesson  && (
+        <LectureDetailDrawer
+          lectureId={viewLesson.id}
+          courseName={courseName}
+          moduleName={mod.name}
+          onClose={() => setViewLesson(null)}
+        />
+      )}
     </div>
   );
 };
@@ -542,7 +564,7 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
             ) : (
               <div className="space-y-3">
                 {modules.map((mod, i) => (
-                  <ModuleRow key={mod.id} mod={mod} index={i} canManage={canManage} />
+                  <ModuleRow key={mod.id} mod={mod} index={i} canManage={canManage} courseName={course?.name} />
                 ))}
               </div>
             )}
