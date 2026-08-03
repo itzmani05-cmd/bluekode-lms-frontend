@@ -94,7 +94,7 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-dashboard" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-8">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-8">
 
             {/* Search */}
             <div className="relative max-w-xl">
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
 
             {/* Welcome */}
             <div>
-              <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Welcome back, {displayName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Welcome back, {displayName}</h1>
               <p className="text-sm text-slate-500 mt-1">
                 {pendingCount > 0 ? (
                   <>You have <span className="font-bold text-amber-600">{pendingCount} pending approval{pendingCount !== 1 ? 's' : ''}</span> waiting for action.</>

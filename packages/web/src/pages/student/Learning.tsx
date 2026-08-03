@@ -14,6 +14,8 @@ import {
   Download,
   RefreshCw,
   ExternalLink,
+  Menu,
+  X,
 } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Sidebar from '../../components/layout/Sidebar';
@@ -58,6 +60,7 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
   const [progress, setProgress]           = useState<LectureProgress[]>([]);
   const [marking, setMarking]             = useState(false);
   const [submissions, setSubmissions]     = useState<LectureSubmission[]>([]);
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
 
   // Submission form state
   const [submissionText, setSubmissionText] = useState('');
@@ -258,20 +261,26 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
           <main className="flex-1 overflow-y-auto">
 
             {/* Breadcrumb */}
-            <div className="px-8 pt-6 pb-2">
-              <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex items-center justify-between gap-3">
+              <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider min-w-0">
                 <span
                   onClick={() => onViewChange?.('courses')}
-                  className="hover:text-slate-600 cursor-pointer"
+                  className="hover:text-slate-600 cursor-pointer shrink-0"
                 >
                   My Courses
                 </span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3 w-3 shrink-0" />
                 <span className="text-blue-600 truncate max-w-[200px]">{courseName}</span>
               </nav>
+              <button
+                onClick={() => setCurriculumOpen(true)}
+                className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors shrink-0"
+              >
+                <Menu className="h-3.5 w-3.5" /> Course Contents
+              </button>
             </div>
 
-            <div className="px-8 pb-8 space-y-6">
+            <div className="px-4 sm:px-6 lg:px-8 pb-8 space-y-6">
 
               {/* Loading */}
               {loadingCurriculum && (
@@ -501,21 +510,43 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
           </main>
 
           {/* ── Right: Course Curriculum ── */}
-          <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white border-l border-slate-200 overflow-y-auto">
-            <div className="p-5 border-b border-slate-100 sticky top-0 bg-white z-10">
-              <h2 className="font-extrabold text-sm text-[#001D6E] truncate">{courseName}</h2>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                  <span>{overallProgress}% Completed</span>
-                  <span>{viewedIds.size}/{totalLessons} Lessons</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                    style={{ width: `${overallProgress}%` }}
-                  />
+          {curriculumOpen && (
+            <div
+              onClick={() => setCurriculumOpen(false)}
+              className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm lg:hidden"
+            />
+          )}
+          <aside
+            className={`
+              fixed inset-y-0 right-0 z-40 w-80 max-w-[85vw] flex flex-col bg-white border-l border-slate-200 overflow-y-auto
+              transform transition-transform duration-300 ease-in-out
+              ${curriculumOpen ? 'translate-x-0' : 'translate-x-full'}
+              lg:static lg:z-auto lg:w-80 lg:max-w-none lg:shrink-0 lg:translate-x-0
+            `}
+          >
+            <div className="p-5 border-b border-slate-100 sticky top-0 bg-white z-10 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-extrabold text-sm text-[#001D6E] truncate">{courseName}</h2>
+                <div className="mt-3 space-y-1.5">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                    <span>{overallProgress}% Completed</span>
+                    <span>{viewedIds.size}/{totalLessons} Lessons</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                      style={{ width: `${overallProgress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => setCurriculumOpen(false)}
+                aria-label="Close course contents"
+                className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {loadingCurriculum && (
@@ -570,7 +601,7 @@ export const Learning: React.FC<{ onViewChange?: (view: ViewType) => void }> = (
                           return (
                             <button
                               key={lesson.id}
-                              onClick={() => { if (!locked) setSelected(lesson); }}
+                              onClick={() => { if (!locked) { setSelected(lesson); setCurriculumOpen(false); } }}
                               disabled={locked}
                               className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
                                 isActive

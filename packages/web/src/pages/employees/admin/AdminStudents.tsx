@@ -240,7 +240,7 @@ const EditModal: React.FC<EditModalProps> = ({ profile, onClose }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Graduating Year</label>
               <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={inputCls()}>
@@ -500,7 +500,7 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-students" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             {/* Page Header */}
             <div className="flex items-start justify-between gap-4">
@@ -509,7 +509,7 @@ const AdminStudents: React.FC<{ onViewChange?: (view: AdminViewType) => void }> 
                   <span>Admin</span><span className="text-slate-300">/</span>
                   <span className="text-blue-600">Students</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Students</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Students</h1>
                 <p className="text-sm text-slate-500 mt-1">{studentProfiles.length} student profile{studentProfiles.length !== 1 ? 's' : ''} in the system.</p>
               </div>
             </div>

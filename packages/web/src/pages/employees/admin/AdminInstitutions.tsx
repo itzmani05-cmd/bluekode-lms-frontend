@@ -199,14 +199,14 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-institutions" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                   <span>Admin</span><span className="text-slate-300">/</span><span className="text-blue-600">Institutions</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Institutions</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Institutions</h1>
                 <p className="text-sm text-slate-500 mt-1">{institutions.length} institutions registered on the platform.</p>
               </div>
               <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0">
@@ -232,9 +232,9 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
             </div>
 
             <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-900/5 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between gap-4">
+              <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h3 className="font-extrabold text-[#001D6E] text-base">All Institutions</h3>
-                <div className="relative">
+                <div className="relative w-full sm:w-auto">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
@@ -245,7 +245,7 @@ const AdminInstitutions: React.FC<{ onViewChange?: (view: AdminViewType) => void
                     value={institutionSearchQuery}
                     onChange={(e) => setInstitutionSearchQuery(e.target.value)}
                     placeholder="Search by name or city..."
-                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all w-56"
+                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all w-full sm:w-56"
                   />
                 </div>
               </div>

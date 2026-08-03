@@ -211,7 +211,7 @@ const CompleteProfile: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* ── Common fields ── */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="First Name *" name="firstName" placeholder="e.g. Priya"
                     value={fields.firstName} error={errors.firstName} disabled={isLoading} onChange={setField} />
                   <Field label="Last Name" name="lastName" placeholder="e.g. Sharma"
@@ -287,7 +287,7 @@ const CompleteProfile: React.FC = () => {
                       value={fields.designation ?? ''} disabled={isLoading} onChange={setField} />
                     <Field label="Specialization" name="specialization" placeholder="e.g. Full Stack Development"
                       value={fields.specialization ?? ''} disabled={isLoading} onChange={setField} />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Field label="Years of Experience" name="yearsOfExperience" placeholder="e.g. 5" type="number"
                         value={fields.yearsOfExperience ?? ''} disabled={isLoading} onChange={setField} />
                       <Field label="Joining Date" name="joiningDate" placeholder="" type="date"

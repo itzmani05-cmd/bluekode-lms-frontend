@@ -166,7 +166,7 @@ const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ onViewChange, activ
         <TrainerSidebar activeTab={activeTab} onViewChange={onViewChange} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-8">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-8">
 
             {/* Search */}
             <div className="relative max-w-xl">
@@ -184,7 +184,7 @@ const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ onViewChange, activ
 
             {/* Welcome */}
             <div>
-              <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Welcome back, {displayName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Welcome back, {displayName}</h1>
               <p className="text-sm text-slate-500 mt-1">
                 You have{' '}
                 <span className="font-bold text-amber-600">{pendingReviews} submissions pending review</span> and{' '}

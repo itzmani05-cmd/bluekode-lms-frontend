@@ -386,6 +386,7 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean
           {modLessons.length === 0 ? (
             <p className="text-xs text-slate-400 font-semibold text-center py-4">No lessons yet.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
@@ -449,6 +450,7 @@ const ModuleRow: React.FC<{ mod: CourseModule; index: number; canManage: boolean
                 })}
               </tbody>
             </table>
+            </div>
           )}
           {canManage && (
             <button onClick={() => setAddLesson(true)}
@@ -495,7 +497,7 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-course-detail" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             {/* Breadcrumb + header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -521,7 +523,7 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
                     <ArrowLeft className="h-4 w-4" />
                   </button>
                   <div>
-                    <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">{course?.name ?? 'Course'}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">{course?.name ?? 'Course'}</h1>
                     {course?.description && (
                       <p className="text-sm text-slate-500 mt-1">{course.description}</p>
                     )}

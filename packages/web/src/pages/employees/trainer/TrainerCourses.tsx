@@ -523,7 +523,7 @@ const LessonModal: React.FC<{
 
             {/* Conditional: ASSIGNMENT → due date + max marks (no attachment) */}
             {isAssignment && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">Due Date <span className="text-slate-300">(optional)</span></label>
                   <input type="date" {...register('dueDate')} className={inputCls(false)} />
@@ -697,11 +697,11 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
         <TrainerSidebar activeTab="trainer-courses" onViewChange={onViewChange} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">My Courses</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">My Courses</h1>
                 <p className="text-sm text-slate-500 mt-1">Add, edit or remove courses, modules and lesson content you teach.</p>
               </div>
               {canManage && (
@@ -733,7 +733,7 @@ const TrainerCourses: React.FC<{ onViewChange?: (view: TrainerViewType) => void 
             {!loading && !fetchError && (
               <>
                 {/* Summary row */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex items-center gap-3">
                     <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
                       <BookOpen className="h-5 w-5" />

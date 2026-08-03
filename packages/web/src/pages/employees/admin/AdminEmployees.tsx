@@ -159,7 +159,7 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Years of Experience</label>
               <input
@@ -273,7 +273,7 @@ const EditModal: React.FC<EditModalProps> = ({ employee, onClose }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Years of Experience</label>
               <input
@@ -417,7 +417,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-employees" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -427,7 +427,7 @@ const AdminEmployees: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
                   <span className="text-slate-300">/</span>
                   <span className="text-blue-600">Employees</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Employees</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Employees</h1>
                 <p className="text-sm text-slate-500 mt-1">{employees.length} employees · {counts.ACTIVE} active across all institutions.</p>
               </div>
             </div>

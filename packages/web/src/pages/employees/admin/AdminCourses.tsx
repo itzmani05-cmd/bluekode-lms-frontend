@@ -247,14 +247,14 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-courses" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                   <span>Admin</span><span className="text-slate-300">/</span><span className="text-blue-600">Courses</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Courses</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Courses</h1>
                 <p className="text-sm text-slate-500 mt-1">{courses.length} courses · {totalEnrollments} total enrollments.</p>
               </div>
               {canManage && (
@@ -264,7 +264,7 @@ const AdminCourses: React.FC<{ onViewChange?: (view: AdminViewType) => void }> =
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { label: 'Active',   value: counts.ACTIVE,   color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
                 { label: 'Draft',    value: counts.DRAFT,    color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100'     },

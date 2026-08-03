@@ -156,7 +156,7 @@ const CreateModal: React.FC<CreateModalProps> = ({ onClose }) => {
           {/* Assignment Type */}
           <div>
             <label className={labelCls}>Assignment Type *</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(['STUDENT', 'INSTITUTION'] as AssignmentType[]).map((t) => {
                 const cfg = typeCfg[t];
                 const active = assignmentType === t;
@@ -343,16 +343,16 @@ const AdminTrainerAssignments: React.FC<{ onViewChange?: (view: AdminViewType) =
       <div className="flex-1 flex overflow-hidden">
         <AdminSidebar activeTab="admin-trainer-assignments" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             {/* Page Header */}
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <nav className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                   <span>Admin</span><span className="text-slate-300">/</span>
                   <span className="text-blue-600">Trainer Assignments</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Trainer Assignments</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Trainer Assignments</h1>
                 <p className="text-sm text-slate-500 mt-1">
                   {trainerAssignments.length} assignment{trainerAssignments.length !== 1 ? 's' : ''} across all trainers.
                 </p>

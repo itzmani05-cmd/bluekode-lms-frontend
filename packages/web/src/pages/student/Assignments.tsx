@@ -139,7 +139,7 @@ export const Assignments: React.FC<{ onViewChange?: (view: StudentView) => void 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeTab="assignments" onViewChange={onViewChange} />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
 
             {/* Search */}
             <div className="relative max-w-xl">
@@ -167,7 +167,7 @@ export const Assignments: React.FC<{ onViewChange?: (view: StudentView) => void 
                   <ChevronRight className="h-3 w-3" />
                   <span className="text-blue-600">Assignments</span>
                 </nav>
-                <h1 className="text-3xl font-extrabold text-[#001D6E] tracking-tight">Assignments</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#001D6E] tracking-tight">Assignments</h1>
                 {!isLoading && !error && (
                   <p className="text-xs text-slate-500 mt-1 font-medium">
                     {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} across your enrolled courses.

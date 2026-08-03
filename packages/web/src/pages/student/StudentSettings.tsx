@@ -79,7 +79,7 @@ const StudentSettings: React.FC<Props> = ({ onViewChange }) => {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeTab="settings" onViewChange={onViewChange} />
 
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-2xl mx-auto space-y-6">
 
             {/* Page title */}
