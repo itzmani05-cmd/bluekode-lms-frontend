@@ -18,7 +18,10 @@ const LECTURE_SELECT = {
   due_date: true,
   max_marks: true,
   assignment_status: true,
+  late_submission_allowed: true,
+  late_submission_deadline: true,
   created_at: true,
+  updated_at: true,
 } satisfies Prisma.LectureSelect;
 
 @Injectable()
