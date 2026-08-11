@@ -178,11 +178,26 @@ export class TrainerAssignmentsService {
             contentType: string;
             progressStatus: string;
           }[];
+          totalsByType: { LECTURE: number; TASK: number; ASSIGNMENT: number };
         } | null;
       };
     }[] = [];
 
     const seenKey = new Set<string>();
+    const courseTotalsCache = new Map<number, { LECTURE: number; TASK: number; ASSIGNMENT: number }>();
+
+    const getCourseTotals = async (courseId: number) => {
+      if (courseTotalsCache.has(courseId)) return courseTotalsCache.get(courseId)!;
+      const rows = await this.prisma.lecture.groupBy({
+        by: ['content_type'],
+        where: { module: { course_id: courseId, is_deleted: false }, is_deleted: false },
+        _count: { lecture_id: true },
+      });
+      const totals = { LECTURE: 0, TASK: 0, ASSIGNMENT: 0 };
+      for (const row of rows) totals[row.content_type] = row._count.lecture_id;
+      courseTotalsCache.set(courseId, totals);
+      return totals;
+    };
 
     for (const a of assignments) {
       if (
@@ -224,6 +239,7 @@ export class TrainerAssignmentsService {
           },
         });
 
+        const studentTotals = await getCourseTotals(a.course_id);
         results.push({
           assignmentId: a.trainer_assignment_id,
           assignmentType: AssignmentType.STUDENT,
@@ -241,6 +257,7 @@ export class TrainerAssignmentsService {
                   completionPercentage:
                     enrollment.completion_percentage.toString(),
                   assignedDate: enrollment.assigned_date,
+                  totalsByType: studentTotals,
                   progresses: enrollment.progresses.map((p) => ({
                     lectureId: p.lecture_id,
                     title: p.lecture.title,
@@ -287,6 +304,7 @@ export class TrainerAssignmentsService {
           },
         });
 
+        const instTotals = await getCourseTotals(a.course_id);
         for (const enrollment of enrollments) {
           const key = `${enrollment.studentProfile.student_profile_id}-${a.course_id}`;
           if (seenKey.has(key)) continue;
@@ -310,6 +328,7 @@ export class TrainerAssignmentsService {
                 completionPercentage:
                   enrollment.completion_percentage.toString(),
                 assignedDate: enrollment.assigned_date,
+                totalsByType: instTotals,
                 progresses: enrollment.progresses.map((p) => ({
                   lectureId: p.lecture_id,
                   title: p.lecture.title,
