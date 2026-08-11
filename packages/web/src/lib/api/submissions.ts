@@ -69,3 +69,19 @@ export const reviewSubmissionApi = (submissionId: string, payload: ReviewSubmiss
   api
     .patch<{ success: boolean; data: ApiSubmission }>(`/submissions/${submissionId}/review`, payload)
     .then((r) => mapSubmission(r.data.data));
+
+export interface RecentSubmission {
+  submission_id:    string;
+  student_name:     string;
+  assignment_title: string;
+  course_name:      string;
+  submission_status: SubmissionStatus;
+  attempt_no:       number;
+  marks_obtained:   number | null;
+  submitted_at:     string | null;
+}
+
+export const fetchRecentSubmissionsApi = (limit = 10) =>
+  api
+    .get<{ success: boolean; data: RecentSubmission[] }>('/submissions/recent', { params: { limit } })
+    .then((r) => r.data.data);

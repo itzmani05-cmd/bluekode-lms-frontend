@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users, Building2, BookOpen, AlertCircle, ChevronRight,
   ClipboardList, UserCheck, Clock, CheckCircle2, RefreshCcw,
-  XCircle, TrendingUp, GraduationCap,
+  XCircle, TrendingUp, GraduationCap, RefreshCw,
 } from 'lucide-react';
 import { useAppStore } from '../../../store/login';
 import { useAdminStore } from '../../../store/Admin';
@@ -10,6 +10,8 @@ import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import { fetchRecentSubmissionsApi } from '../../../lib/api/submissions';
+import type { RecentSubmission } from '../../../lib/api/submissions';
 
 type SubmissionStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'REVIEWED' | 'RESUBMISSION_REQUIRED';
 
@@ -20,13 +22,15 @@ const submissionCfg: Record<SubmissionStatus, { label: string; className: string
   RESUBMISSION_REQUIRED: { label: 'Resubmission', className: 'bg-red-50 text-red-600 border-red-100',             Icon: RefreshCcw    },
 };
 
-const mockSubmissions = [
-  { id: 1, studentName: 'Arjun Mehta',    assignmentTitle: 'Security Audit Case Study',  status: 'SUBMITTED'             as SubmissionStatus, submittedAt: '2 hrs ago' },
-  { id: 2, studentName: 'Kavya Reddy',    assignmentTitle: 'Network Topology Design',     status: 'UNDER_REVIEW'          as SubmissionStatus, submittedAt: '4 hrs ago' },
-  { id: 3, studentName: 'Meera Krishnan', assignmentTitle: 'CI/CD Pipeline Setup',        status: 'REVIEWED'              as SubmissionStatus, submittedAt: 'Yesterday' },
-  { id: 4, studentName: 'Rohan Kapoor',   assignmentTitle: 'Compliance Framework Essay',  status: 'RESUBMISSION_REQUIRED' as SubmissionStatus, submittedAt: 'Jul 04'    },
-  { id: 5, studentName: 'Aditya Singh',   assignmentTitle: 'Sprint Planning Exercise',    status: 'SUBMITTED'             as SubmissionStatus, submittedAt: 'Jul 03'    },
-];
+function formatRelativeDate(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  const diffHrs = (Date.now() - date.getTime()) / (1000 * 60 * 60);
+  if (diffHrs < 1)  return 'Just now';
+  if (diffHrs < 24) return `${Math.floor(diffHrs)} hr${Math.floor(diffHrs) > 1 ? 's' : ''} ago`;
+  if (diffHrs < 48) return 'Yesterday';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -62,11 +66,18 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
     updateUserStatus,
   } = useAdminStore();
 
+  const [recentSubmissions, setRecentSubmissions] = useState<RecentSubmission[]>([]);
+  const [subsLoading, setSubsLoading] = useState(true);
+
   useEffect(() => {
     fetchUsers();
     fetchCourses();
     fetchInstitutions();
     fetchStudentProfiles();
+    fetchRecentSubmissionsApi(5)
+      .then(setRecentSubmissions)
+      .catch(() => {})
+      .finally(() => setSubsLoading(false));
   }, []);
 
   const totalUsers       = users.length;
@@ -157,38 +168,65 @@ const AdminDashboard: React.FC<{ onViewChange?: (view: AdminViewType) => void }>
             {/* Submissions + Pending Approvals */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-              {/* Recent Submissions (mock — no submissions API yet) */}
+              {/* Recent Submissions */}
               <section className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm shadow-slate-900/5">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="font-extrabold text-[#001D6E] text-base">Recent Submissions</h3>
-                  <span className="text-[10px] font-bold text-white bg-blue-600 rounded-full px-2 py-0.5">{mockSubmissions.length}</span>
+                  {subsLoading
+                    ? <RefreshCw className="h-3.5 w-3.5 text-slate-300 animate-spin" />
+                    : <span className="text-[10px] font-bold text-white bg-blue-600 rounded-full px-2 py-0.5">{recentSubmissions.length}</span>
+                  }
                 </div>
-                <div className="divide-y divide-slate-100">
-                  {mockSubmissions.map((sub) => {
-                    const cfg = submissionCfg[sub.status];
-                    const StatusIcon = cfg.Icon;
-                    return (
-                      <div key={sub.id} className="py-3.5 first:pt-0 last:pb-0 flex justify-between items-start gap-3">
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className="h-7 w-7 rounded-full bg-[#001D6E]/10 text-[#001D6E] font-bold text-[10px] flex items-center justify-center shrink-0">
-                            {sub.studentName.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-900 truncate">{sub.studentName}</p>
-                            <p className="text-[10px] text-slate-400 font-semibold truncate">{sub.assignmentTitle}</p>
-                          </div>
+                {subsLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 animate-pulse">
+                        <div className="h-7 w-7 rounded-full bg-slate-100 shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-2.5 bg-slate-100 rounded w-28" />
+                          <div className="h-2 bg-slate-100 rounded w-44" />
                         </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border flex items-center gap-1 ${cfg.className}`}>
-                            <StatusIcon className="h-2.5 w-2.5" />
-                            {cfg.label}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-semibold">{sub.submittedAt}</span>
-                        </div>
+                        <div className="h-5 w-16 bg-slate-100 rounded-full" />
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                ) : recentSubmissions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-300">
+                    <ClipboardList className="h-7 w-7 mb-2" />
+                    <p className="text-xs font-semibold text-slate-400">No submissions yet.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {recentSubmissions.map((sub) => {
+                      const cfg = submissionCfg[sub.submission_status as SubmissionStatus] ?? submissionCfg.SUBMITTED;
+                      const StatusIcon = cfg.Icon;
+                      return (
+                        <div key={sub.submission_id} className="py-3.5 first:pt-0 last:pb-0 flex justify-between items-start gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="h-7 w-7 rounded-full bg-[#001D6E]/10 text-[#001D6E] font-bold text-[10px] flex items-center justify-center shrink-0">
+                              {sub.student_name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">{sub.student_name}</p>
+                              <p className="text-[10px] text-slate-400 font-semibold truncate">{sub.assignment_title}</p>
+                              <p className="text-[9px] text-slate-300 font-semibold truncate">{sub.course_name}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border flex items-center gap-1 ${cfg.className}`}>
+                              <StatusIcon className="h-2.5 w-2.5" />
+                              {cfg.label}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-semibold">{formatRelativeDate(sub.submitted_at)}</span>
+                            {sub.marks_obtained !== null && (
+                              <span className="text-[9px] font-extrabold text-emerald-600">{sub.marks_obtained} pts</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
 
               {/* Pending Approvals — real data */}
