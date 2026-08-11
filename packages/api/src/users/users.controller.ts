@@ -19,6 +19,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { BulkUpdateStatusDto } from './dto/bulk-update-status.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -51,6 +52,17 @@ export class UsersController {
   })
   findAll(@Query() queryUserDto: QueryUserDto) {
     return this.usersService.findAll(queryUserDto);
+  }
+
+  /*Bulk update account status for multiple users */
+  @Patch('bulk-status')
+  @ApiOperation({ summary: 'Bulk update account status for multiple users' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users updated successfully',
+  })
+  bulkUpdateStatus(@Body() dto: BulkUpdateStatusDto) {
+    return this.usersService.bulkUpdateStatus(dto.ids, dto.status);
   }
 
   /*Get a user by id */

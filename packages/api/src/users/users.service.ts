@@ -126,6 +126,18 @@ export class UsersService {
     };
   }
 
+  async bulkUpdateStatus(ids: number[], status: AccountStatus) {
+    const result = await this.prisma.user.updateMany({
+      where: { user_id: { in: ids }, is_deleted: false },
+      data: { account_status: status },
+    });
+    return {
+      success: true,
+      message: `${result.count} user(s) updated`,
+      updatedCount: result.count,
+    };
+  }
+
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { user_id: parseInt(id) },

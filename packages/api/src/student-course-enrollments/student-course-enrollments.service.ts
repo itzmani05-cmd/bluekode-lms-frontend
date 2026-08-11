@@ -4,10 +4,38 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EnrollmentStatus, Prisma } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { QueryEnrollmentDto } from './dto/query-enrollment.dto';
+import { BulkEnrollRowDto } from './dto/bulk-enroll.dto';
+
+export interface BulkEnrollRowResult {
+  email: string;
+  status: 'created_and_enrolled' | 'enrolled' | 'already_enrolled' | 'error';
+  message?: string;
+  generatedPassword?: string;
+}
+
+const generateTempPassword = (): string => {
+  const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '@#$!';
+  const pool = upper + lower + digits + special;
+  const required = [
+    upper[Math.floor(Math.random() * upper.length)],
+    lower[Math.floor(Math.random() * lower.length)],
+    digits[Math.floor(Math.random() * digits.length)],
+    special[Math.floor(Math.random() * special.length)],
+  ];
+  const rest = Array.from(
+    { length: 6 },
+    () => pool[Math.floor(Math.random() * pool.length)],
+  );
+  return [...required, ...rest].sort(() => Math.random() - 0.5).join('');
+};
 
 const ENROLLMENT_SELECT = {
   enrollment_id: true,
@@ -88,6 +116,148 @@ export class StudentCourseEnrollmentsService {
       }
       throw e;
     }
+  }
+
+  async bulkEnroll(
+    courseId: number,
+    rows: BulkEnrollRowDto[],
+    adminUserId: number,
+  ) {
+    await this.ensureCourseExists(courseId);
+
+    const institutionIds = [...new Set(rows.map((r) => r.institutionId))];
+    const validInstitutions = await this.prisma.institution.findMany({
+      where: { institution_id: { in: institutionIds }, is_deleted: false },
+      select: { institution_id: true },
+    });
+    const validInstitutionIds = new Set(
+      validInstitutions.map((i) => i.institution_id),
+    );
+
+    const studentRole = await this.prisma.role.findFirst({
+      where: { role_name: { equals: 'student', mode: 'insensitive' } },
+    });
+
+    const results: BulkEnrollRowResult[] = [];
+
+    for (const row of rows) {
+      try {
+        if (!validInstitutionIds.has(row.institutionId)) {
+          results.push({
+            email: row.email,
+            status: 'error',
+            message: `Institution ${row.institutionId} not found`,
+          });
+          continue;
+        }
+
+        let user = await this.prisma.user.findFirst({
+          where: {
+            email: { equals: row.email, mode: 'insensitive' },
+            is_deleted: false,
+          },
+        });
+
+        let generatedPassword: string | undefined;
+        let createdAccount = false;
+
+        if (!user) {
+          if (!studentRole) {
+            results.push({
+              email: row.email,
+              status: 'error',
+              message: "No 'Student' role configured in the system",
+            });
+            continue;
+          }
+          generatedPassword = generateTempPassword();
+          const password_hash = await bcrypt.hash(generatedPassword, 10);
+          user = await this.prisma.user.create({
+            data: {
+              full_name: row.fullName,
+              last_name: row.lastName ?? '-',
+              email: row.email,
+              password_hash,
+              account_status: 'ACTIVE',
+            },
+          });
+          await this.prisma.userRole.create({
+            data: { user_id: user.user_id, role_id: studentRole.role_id },
+          });
+          createdAccount = true;
+        }
+
+        let profile = await this.prisma.studentProfile.findUnique({
+          where: { user_id: user.user_id },
+        });
+
+        if (!profile) {
+          profile = await this.prisma.studentProfile.create({
+            data: {
+              user_id: user.user_id,
+              institution_id: row.institutionId,
+              department: row.department,
+              academic_year: row.academicYear,
+              form_status: 'VERIFIED',
+              created_by: adminUserId,
+            },
+          });
+        }
+
+        try {
+          await this.prisma.studentCourseEnrollment.create({
+            data: {
+              student_profile_id: profile.student_profile_id,
+              course_id: courseId,
+              enrollment_status: EnrollmentStatus.ASSIGNED,
+              assigned_date: new Date(),
+              created_by: adminUserId,
+            },
+          });
+          results.push({
+            email: row.email,
+            status: createdAccount ? 'created_and_enrolled' : 'enrolled',
+            generatedPassword,
+          });
+        } catch (e) {
+          if (
+            e instanceof Prisma.PrismaClientKnownRequestError &&
+            e.code === 'P2002'
+          ) {
+            results.push({
+              email: row.email,
+              status: 'already_enrolled',
+              generatedPassword,
+            });
+          } else {
+            throw e;
+          }
+        }
+      } catch (e) {
+        results.push({
+          email: row.email,
+          status: 'error',
+          message: e instanceof Error ? e.message : 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      success: true,
+      data: results,
+      summary: {
+        total: results.length,
+        createdAccounts: results.filter(
+          (r) => r.status === 'created_and_enrolled',
+        ).length,
+        enrolled: results.filter(
+          (r) => r.status === 'created_and_enrolled' || r.status === 'enrolled',
+        ).length,
+        alreadyEnrolled: results.filter((r) => r.status === 'already_enrolled')
+          .length,
+        errors: results.filter((r) => r.status === 'error').length,
+      },
+    };
   }
 
   async findAllForProfile(studentProfileId: number, dto: QueryEnrollmentDto) {

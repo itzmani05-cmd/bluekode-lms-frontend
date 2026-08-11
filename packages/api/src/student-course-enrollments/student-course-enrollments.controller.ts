@@ -20,6 +20,7 @@ import { StudentCourseEnrollmentsService } from './student-course-enrollments.se
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { QueryEnrollmentDto } from './dto/query-enrollment.dto';
+import { BulkEnrollDto } from './dto/bulk-enroll.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
@@ -50,6 +51,18 @@ export class StudentCourseEnrollmentsController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.enrollmentsService.create(studentProfileId, dto, user.sub);
+  }
+
+  @Post('enrollments/bulk-import')
+  @Roles('Admin')
+  @ApiOperation({
+    summary:
+      'Bulk-import students into a course from parsed CSV rows (Admin only). Creates the account if the email is unrecognized, otherwise enrolls the existing student.',
+  })
+  @ApiResponse({ status: 201, description: 'Per-row import results' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  bulkImport(@Body() dto: BulkEnrollDto, @CurrentUser() user: JwtPayload) {
+    return this.enrollmentsService.bulkEnroll(dto.courseId, dto.rows, user.sub);
   }
 
   @Get('student-profiles/:studentProfileId/enrollments')
