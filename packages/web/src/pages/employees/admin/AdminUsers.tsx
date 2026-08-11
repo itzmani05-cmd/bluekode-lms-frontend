@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import emailjs from '@emailjs/browser';
-import { UserCheck, XCircle, UserX, Plus, X, Copy, CheckCheck, Mail, RefreshCw, AlertTriangle, Send } from 'lucide-react';
+import { UserCheck, XCircle, UserX, Plus, X, Copy, CheckCheck, Mail, RefreshCw, AlertTriangle, Send, Users } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
 import AdminSidebar from '../../../components/layout/AdminSidebar';
 import type { AdminViewType } from '../../../components/layout/AdminSidebar';
@@ -207,11 +207,20 @@ const CreateUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
 const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = ({ onViewChange }) => {
   useDocumentTitle('User Management');
-  const { users, isLoading, fetchUsers, userSearchQuery, userStatusFilter, setUserSearchQuery, setUserStatusFilter, updateUserStatus } = useAdminStore();
+  const { users, isLoading, fetchUsers, userSearchQuery, userStatusFilter, setUserSearchQuery, setUserStatusFilter, updateUserStatus, bulkUpdateUserStatus } = useAdminStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [lastFilter, setLastFilter]   = useState(userStatusFilter);
 
   useEffect(() => { fetchUsers(); }, []);
+
+  // Clear selection when the status filter changes (render-time reset, not an effect —
+  // see https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  if (userStatusFilter !== lastFilter) {
+    setLastFilter(userStatusFilter);
+    setSelectedIds(new Set());
+  }
 
   const changeStatus = (id: number, status: AccountStatus, message: string) => {
     setConfirm({
@@ -227,6 +236,30 @@ const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = (
       return matchesStatus && (!q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
     });
   }, [userSearchQuery, userStatusFilter, users]);
+
+  const selectableIds  = useMemo(() => filtered.map((u) => u.id), [filtered]);
+  const allSelected    = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+  const someSelected   = selectedIds.size > 0 && !allSelected;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(selectableIds));
+  };
+
+  const toggleSelectOne = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const bulkChangeStatus = (status: AccountStatus, label: string) => {
+    const ids = Array.from(selectedIds);
+    setConfirm({
+      message: `${label} ${ids.length} selected user${ids.length !== 1 ? 's' : ''}?`,
+      onConfirm: () => { bulkUpdateUserStatus(ids, status); setSelectedIds(new Set()); setConfirm(null); },
+    });
+  };
 
   const counts = useMemo(() => ({
     all:      users.length,
@@ -286,10 +319,55 @@ const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = (
                 </div>
               </div>
 
+              {selectedIds.size > 0 && (
+                <div className="px-5 py-3 border-b border-blue-100 bg-blue-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-800">
+                    <Users className="h-3.5 w-3.5" />
+                    {selectedIds.size} selected
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => bulkChangeStatus('ACTIVE', 'Approve/activate')}
+                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold border border-emerald-100 hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                    >
+                      <UserCheck className="h-3 w-3" /> Approve / Activate
+                    </button>
+                    <button
+                      onClick={() => bulkChangeStatus('REJECTED', 'Reject')}
+                      className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-extrabold border border-red-100 hover:bg-red-100 transition-colors flex items-center gap-1"
+                    >
+                      <XCircle className="h-3 w-3" /> Reject
+                    </button>
+                    <button
+                      onClick={() => bulkChangeStatus('INACTIVE', 'Deactivate')}
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-extrabold border border-slate-200 hover:bg-slate-100 transition-colors flex items-center gap-1"
+                    >
+                      <UserX className="h-3 w-3" /> Deactivate
+                    </button>
+                    <button
+                      onClick={() => setSelectedIds(new Set())}
+                      className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-600 text-[10px] font-extrabold transition-colors flex items-center gap-1"
+                    >
+                      <X className="h-3 w-3" /> Clear
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/50">
+                      <th className="py-3 pl-5 pr-2 w-8">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                          onChange={toggleSelectAll}
+                          aria-label="Select all users"
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
+                        />
+                      </th>
                       <th className="text-left py-3 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">User</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Role</th>
                       <th className="text-left py-3 px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
@@ -299,13 +377,22 @@ const AdminUsers: React.FC<{ onViewChange?: (view: AdminViewType) => void }> = (
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {isLoading ? (
-                      <tr><td colSpan={5} className="py-12 text-center text-sm text-slate-400 font-semibold">Loading users...</td></tr>
+                      <tr><td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">Loading users...</td></tr>
                     ) : filtered.length === 0 ? (
-                      <tr><td colSpan={5} className="py-12 text-center text-sm text-slate-400 font-semibold">No users match your search.</td></tr>
+                      <tr><td colSpan={6} className="py-12 text-center text-sm text-slate-400 font-semibold">No users match your search.</td></tr>
                     ) : filtered.map((user) => {
                       const sCfg = statusCfg[user.accountStatus];
                       return (
-                        <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={user.id} className={`hover:bg-slate-50/50 transition-colors ${selectedIds.has(user.id) ? 'bg-blue-50/40' : ''}`}>
+                          <td className="py-3.5 pl-5 pr-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(user.id)}
+                              onChange={() => toggleSelectOne(user.id)}
+                              aria-label={`Select ${user.fullName}`}
+                              className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
+                            />
+                          </td>
                           <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 rounded-full bg-[#001D6E]/10 text-[#001D6E] font-bold text-xs flex items-center justify-center shrink-0">

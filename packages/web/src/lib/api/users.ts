@@ -29,3 +29,6 @@ export const createUserApi = (email: string, password: string, full_name: string
 
 export const updateUserStatusApi = (id: number, status: AccountStatus) =>
   api.patch(`/users/${id}`, { status }).then((r) => r.data);
+
+export const bulkUpdateUserStatusApi = (ids: number[], status: AccountStatus) =>
+  api.patch('/users/bulk-status', { ids, status }).then((r) => r.data);

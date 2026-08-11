@@ -3,6 +3,7 @@ import {
   fetchUsers as apiFetchUsers,
   createUserApi,
   updateUserStatusApi,
+  bulkUpdateUserStatusApi,
 } from '../lib/api/users';
 import {
   fetchCourses as apiFetchCourses,
@@ -189,8 +190,9 @@ type AdminState = {
   deleteCourse: (id: number) => Promise<void>;
 
   // User actions
-  addUser:          (email: string, role: UserRole, fullName: string, password: string) => Promise<void>;
-  updateUserStatus: (id: number, status: AccountStatus) => Promise<void>;
+  addUser:              (email: string, role: UserRole, fullName: string, password: string) => Promise<void>;
+  updateUserStatus:     (id: number, status: AccountStatus) => Promise<void>;
+  bulkUpdateUserStatus: (ids: number[], status: AccountStatus) => Promise<void>;
 
   // Student profile actions
   createStudentProfile: (userId: number, institutionId: number, department?: string, academicYear?: number) => Promise<void>;
@@ -553,6 +555,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       // Revert optimistic update by re-fetching
       await get().fetchUsers();
       set({ error: 'Failed to update user status.' });
+    }
+  },
+
+  bulkUpdateUserStatus: async (ids, status) => {
+    const idSet = new Set(ids);
+    // Optimistic update
+    set((s) => ({ users: s.users.map((u) => (idSet.has(u.id) ? { ...u, accountStatus: status } : u)) }));
+    try {
+      await bulkUpdateUserStatusApi(ids, status);
+    } catch {
+      // Revert optimistic update by re-fetching
+      await get().fetchUsers();
+      set({ error: 'Failed to update selected users.' });
     }
   },
 }));

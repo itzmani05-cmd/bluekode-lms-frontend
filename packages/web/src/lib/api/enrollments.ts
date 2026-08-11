@@ -50,3 +50,35 @@ export const createEnrollmentApi = (studentProfileId: number, courseId: number) 
       { courseId },
     )
     .then((r) => mapEnrollment(r.data.data));
+
+export interface BulkEnrollRow {
+  email:         string;
+  fullName:      string;
+  lastName?:     string;
+  institutionId: number;
+  department?:   string;
+  academicYear?: number;
+}
+
+export interface BulkEnrollRowResult {
+  email:              string;
+  status:             'created_and_enrolled' | 'enrolled' | 'already_enrolled' | 'error';
+  message?:           string;
+  generatedPassword?: string;
+}
+
+export interface BulkEnrollSummary {
+  total:           number;
+  createdAccounts: number;
+  enrolled:        number;
+  alreadyEnrolled: number;
+  errors:          number;
+}
+
+export const bulkImportEnrollmentsApi = (courseId: number, rows: BulkEnrollRow[]) =>
+  api
+    .post<{ success: boolean; data: BulkEnrollRowResult[]; summary: BulkEnrollSummary }>(
+      '/enrollments/bulk-import',
+      { courseId, rows },
+    )
+    .then((r) => r.data);

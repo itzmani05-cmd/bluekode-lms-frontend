@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  ChevronDown, ChevronRight, Plus, Pencil, Trash2, X, Eye,
+  ChevronDown, ChevronRight, Plus, Pencil, Trash2, X, Eye, Upload,
   BookOpen, FileText, ClipboardList, ArrowLeft, Layers, ListTodo,
 } from 'lucide-react';
 import AdminHeader from '../../../components/layout/AdminHeader';
@@ -12,6 +12,7 @@ import { useAdminStore } from '../../../store/Admin';
 import type { CourseModule, Lesson, CreateLessonPayload, UpdateLessonPayload } from '../../../store/Admin';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import LectureDetailDrawer from '../../../components/LectureDetailDrawer';
+import CsvImportStudentsModal from '../../../components/CsvImportStudentsModal';
 import { moduleSchema, type ModuleFields } from '../../../schemas/moduleSchema';
 import { lectureSchema, contentTypeValues, lessonStatusValues, type LectureFields } from '../../../schemas/lectureSchema';
 import useDocumentTitle from '../../../hooks/useDocumentTitle';
@@ -483,6 +484,7 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
   const { currentUser } = useAppStore();
   const canManage = canManageCourses(currentUser?.email);
   const [showAddModule, setShowAddModule] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
 
   const course = courses.find((c) => c.id === selectedCourseId);
   useDocumentTitle(course ? `${course.name} — Modules` : 'Course Modules');
@@ -531,12 +533,20 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
                 </div>
               </div>
               {canManage && (
-                <button
-                  onClick={() => setShowAddModule(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors shrink-0"
-                >
-                  <Plus className="h-4 w-4" /> New Module
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setShowCsvImport(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-sm font-semibold rounded-xl shadow-sm transition-colors"
+                  >
+                    <Upload className="h-4 w-4" /> Import Students
+                  </button>
+                  <button
+                    onClick={() => setShowAddModule(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" /> New Module
+                  </button>
+                </div>
               )}
             </div>
 
@@ -577,6 +587,13 @@ const AdminCourseDetail: React.FC<{ onViewChange?: (view: AdminViewType) => void
 
       {showAddModule && selectedCourseId && (
         <ModuleModal courseId={selectedCourseId} onClose={() => setShowAddModule(false)} />
+      )}
+      {showCsvImport && selectedCourseId && (
+        <CsvImportStudentsModal
+          courseId={selectedCourseId}
+          courseName={course?.name ?? 'this course'}
+          onClose={() => setShowCsvImport(false)}
+        />
       )}
     </div>
   );
