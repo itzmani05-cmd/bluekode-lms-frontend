@@ -51,6 +51,49 @@ export class AssignmentSubmissionsService {
     return enrollment;
   }
 
+  async findRecent(limit = 10) {
+    const rows = await this.prisma.assignmentSubmission.findMany({
+      take: limit,
+      orderBy: { created_at: 'desc' },
+      select: {
+        submission_id: true,
+        submission_status: true,
+        attempt_no: true,
+        marks_obtained: true,
+        created_at: true,
+        lecture: {
+          select: {
+            title: true,
+            module: { select: { course: { select: { course_name: true } } } },
+          },
+        },
+        enrollment: {
+          select: {
+            studentProfile: {
+              select: {
+                user: { select: { full_name: true, last_name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: rows.map((r) => ({
+        submission_id: r.submission_id.toString(),
+        student_name: `${r.enrollment.studentProfile.user.full_name} ${r.enrollment.studentProfile.user.last_name}`.trim(),
+        assignment_title: r.lecture.title,
+        course_name: r.lecture.module.course.course_name,
+        submission_status: r.submission_status,
+        attempt_no: r.attempt_no,
+        marks_obtained: r.marks_obtained ? Number(r.marks_obtained) : null,
+        submitted_at: r.created_at?.toISOString() ?? null,
+      })),
+    };
+  }
+
   async findLatestForEnrollment(enrollmentId: number) {
     await this.ensureEnrollmentExists(enrollmentId);
 

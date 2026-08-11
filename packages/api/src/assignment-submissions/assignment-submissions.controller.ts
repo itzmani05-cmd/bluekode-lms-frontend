@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,6 +26,13 @@ export class AssignmentSubmissionsController {
   constructor(
     private readonly submissionsService: AssignmentSubmissionsService,
   ) {}
+
+  @Get('submissions/recent')
+  @ApiOperation({ summary: 'Get recent submissions across all enrollments (admin)' })
+  @ApiResponse({ status: 200, description: 'Recent submissions' })
+  findRecent(@Query('limit') limit?: string) {
+    return this.submissionsService.findRecent(limit ? parseInt(limit, 10) : 10);
+  }
 
   @Get('enrollments/:enrollmentId/submissions')
   @ApiOperation({
