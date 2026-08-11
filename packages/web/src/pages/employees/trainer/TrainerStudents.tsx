@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ChevronDown, ChevronUp, CheckCircle2, Circle, Clock, RefreshCw, AlertTriangle, Users } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, CheckCircle2, Circle, Clock, RefreshCw, AlertTriangle, Users, BookOpen, ClipboardList, ListChecks } from 'lucide-react';
 import TrainerHeader from '../../../components/layout/TrainerHeader';
 import TrainerSidebar from '../../../components/layout/TrainerSidebar';
 import type { TrainerViewType } from '../../../components/layout/TrainerSidebar';
@@ -206,52 +206,95 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                             {isOpen ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />}
                           </button>
 
-                          {isOpen && (
-                            <div className="border-t border-slate-100 px-5 pb-5 pt-4 bg-slate-50/50">
-                              {progresses.length === 0 ? (
-                                <p className="text-xs text-slate-400 font-semibold">No lecture progress recorded yet.</p>
-                              ) : (
-                                <>
-                                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-3">Lecture & Assignment Progress</p>
-                                  <div className="space-y-2">
-                                    {progresses.map((lec) => {
-                                      const ps = lec.progressStatus as ProgressStatus;
-                                      const { Icon, className } = progressIconCfg[ps] ?? progressIconCfg.NOT_STARTED;
-                                      return (
-                                        <div key={lec.lectureId} className="flex items-center gap-3">
-                                          <Icon className={`h-4 w-4 shrink-0 ${className}`} />
-                                          <span className="text-xs font-semibold text-slate-700 flex-1">{lec.title}</span>
-                                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border
-                                            ${lec.contentType === 'ASSIGNMENT'
-                                              ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                                              : 'bg-slate-100 text-slate-500 border-slate-200'}`}
-                                          >
-                                            {lec.contentType === 'ASSIGNMENT' ? 'Assignment' : 'Lecture'}
-                                          </span>
-                                          <span className={`text-[9px] font-extrabold w-20 text-right
-                                            ${ps === 'COMPLETED'   ? 'text-emerald-600' :
-                                              ps === 'IN_PROGRESS' ? 'text-blue-600'    : 'text-slate-400'}`}
-                                          >
-                                            {ps === 'NOT_STARTED' ? 'Not Started' :
-                                             ps === 'IN_PROGRESS' ? 'In Progress'  : 'Completed'}
-                                          </span>
-                                        </div>
-                                      );
+                          {isOpen && (() => {
+                            const lectures    = progresses.filter((p) => p.contentType === 'LECTURE');
+                            const assignments = progresses.filter((p) => p.contentType === 'ASSIGNMENT');
+                            const tasks       = progresses.filter((p) => p.contentType === 'TASK');
+
+                            const typeSections = [
+                              { label: 'Lectures',    Icon: BookOpen,     items: lectures,    bar: 'bg-blue-500',    text: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
+                              { label: 'Assignments', Icon: ClipboardList, items: assignments, bar: 'bg-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+                              { label: 'Tasks',       Icon: ListChecks,   items: tasks,       bar: 'bg-amber-500',  text: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-100'  },
+                            ];
+
+                            const contentTypeBadge: Record<string, string> = {
+                              LECTURE:    'bg-blue-50 text-blue-600 border-blue-100',
+                              ASSIGNMENT: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                              TASK:       'bg-amber-50 text-amber-600 border-amber-100',
+                            };
+                            const contentTypeLabel: Record<string, string> = {
+                              LECTURE: 'Lecture', ASSIGNMENT: 'Assignment', TASK: 'Task',
+                            };
+
+                            return (
+                              <div className="border-t border-slate-100 px-5 pb-5 pt-4 bg-slate-50/50">
+                                {progresses.length === 0 ? (
+                                  <p className="text-xs text-slate-400 font-semibold">No progress recorded yet.</p>
+                                ) : (
+                                  <>
+                                    {/* Per-type summary bars */}
+                                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-3">Progress Summary</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                                      {typeSections.map(({ label, Icon, items, bar, text, bg, border }) => {
+                                        const done = items.filter((p) => p.progressStatus === 'COMPLETED').length;
+                                        const total = items.length;
+                                        const pctType = total > 0 ? Math.round((done / total) * 100) : 0;
+                                        return (
+                                          <div key={label} className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Icon className={`h-4 w-4 shrink-0 ${text}`} />
+                                              <span className={`text-[11px] font-extrabold ${text}`}>{label}</span>
+                                              <span className={`ml-auto text-sm font-extrabold ${text}`}>{pctType}%</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden mb-1.5">
+                                              <div className={`h-full rounded-full transition-all ${bar}`} style={{ width: `${pctType}%` }} />
+                                            </div>
+                                            <p className="text-[10px] font-semibold text-slate-500">
+                                              {total === 0 ? 'None in course' : `${done} / ${total} completed`}
+                                            </p>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Detailed item list */}
+                                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-3">All Items</p>
+                                    <div className="space-y-2">
+                                      {progresses.map((lec) => {
+                                        const ps = lec.progressStatus as ProgressStatus;
+                                        const { Icon, className } = progressIconCfg[ps] ?? progressIconCfg.NOT_STARTED;
+                                        return (
+                                          <div key={lec.lectureId} className="flex items-center gap-3">
+                                            <Icon className={`h-4 w-4 shrink-0 ${className}`} />
+                                            <span className="text-xs font-semibold text-slate-700 flex-1">{lec.title}</span>
+                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${contentTypeBadge[lec.contentType] ?? 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                              {contentTypeLabel[lec.contentType] ?? lec.contentType}
+                                            </span>
+                                            <span className={`text-[9px] font-extrabold w-20 text-right
+                                              ${ps === 'COMPLETED'   ? 'text-emerald-600' :
+                                                ps === 'IN_PROGRESS' ? 'text-blue-600'    : 'text-slate-400'}`}
+                                            >
+                                              {ps === 'NOT_STARTED' ? 'Not Started' :
+                                               ps === 'IN_PROGRESS' ? 'In Progress'  : 'Completed'}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </>
+                                )}
+                                {s.student.enrollment?.assignedDate && (
+                                  <div className="mt-4 text-[10px] text-slate-400 font-semibold">
+                                    Enrolled:{' '}
+                                    {new Date(s.student.enrollment.assignedDate).toLocaleDateString('en-US', {
+                                      month: 'short', day: 'numeric', year: 'numeric',
                                     })}
+                                    {' · '}Email: {s.student.email}
                                   </div>
-                                </>
-                              )}
-                              {s.student.enrollment?.assignedDate && (
-                                <div className="mt-4 text-[10px] text-slate-400 font-semibold">
-                                  Enrolled:{' '}
-                                  {new Date(s.student.enrollment.assignedDate).toLocaleDateString('en-US', {
-                                    month: 'short', day: 'numeric', year: 'numeric',
-                                  })}
-                                  {' · '}Email: {s.student.email}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
