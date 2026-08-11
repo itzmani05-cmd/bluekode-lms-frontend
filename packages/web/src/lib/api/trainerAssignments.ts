@@ -35,6 +35,7 @@ export interface AccessibleStudent {
       status: string;
       completionPercentage: string;
       assignedDate: string | null;
+      totalsByType: { LECTURE: number; TASK: number; ASSIGNMENT: number };
       progresses: {
         lectureId: number;
         title: string;

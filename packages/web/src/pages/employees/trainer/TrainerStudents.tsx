@@ -211,10 +211,11 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                             const assignments = progresses.filter((p) => p.contentType === 'ASSIGNMENT');
                             const tasks       = progresses.filter((p) => p.contentType === 'TASK');
 
+                            const totals = s.student.enrollment?.totalsByType;
                             const typeSections = [
-                              { label: 'Lectures',    Icon: BookOpen,     items: lectures,    bar: 'bg-blue-500',    text: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
-                              { label: 'Assignments', Icon: ClipboardList, items: assignments, bar: 'bg-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-                              { label: 'Tasks',       Icon: ListChecks,   items: tasks,       bar: 'bg-amber-500',  text: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-100'  },
+                              { label: 'Lectures',    Icon: BookOpen,      items: lectures,    total: totals?.LECTURE    ?? lectures.length,    bar: 'bg-blue-500',    text: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
+                              { label: 'Assignments', Icon: ClipboardList, items: assignments, total: totals?.ASSIGNMENT ?? assignments.length, bar: 'bg-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+                              { label: 'Tasks',       Icon: ListChecks,    items: tasks,       total: totals?.TASK       ?? tasks.length,       bar: 'bg-amber-500',  text: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-100'  },
                             ];
 
                             const contentTypeBadge: Record<string, string> = {
@@ -235,9 +236,8 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                                     {/* Per-type summary bars */}
                                     <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-3">Progress Summary</p>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-                                      {typeSections.map(({ label, Icon, items, bar, text, bg, border }) => {
+                                      {typeSections.map(({ label, Icon, items, total, bar, text, bg, border }) => {
                                         const done = items.filter((p) => p.progressStatus === 'COMPLETED').length;
-                                        const total = items.length;
                                         const pctType = total > 0 ? Math.round((done / total) * 100) : 0;
                                         return (
                                           <div key={label} className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
