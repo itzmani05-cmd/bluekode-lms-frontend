@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ClipboardList, Clock, CheckCircle2, RefreshCcw,
   GraduationCap, BookOpen, TrendingUp, ChevronRight,
-  Eye, Star, AlertTriangle, Users, RefreshCw,
+  Star, Users, RefreshCw,
 } from 'lucide-react';
 import { useAppStore } from '../../../store/login';
 import TrainerHeader from '../../../components/layout/TrainerHeader';
@@ -377,33 +377,6 @@ const TrainerDashboard: React.FC<TrainerDashboardProps> = ({ onViewChange, activ
               </div>
             </section>
 
-            {/* Quick Actions */}
-            <section className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm shadow-slate-900/5">
-              <h3 className="font-extrabold text-[#001D6E] text-base mb-5">Quick Actions</h3>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => onViewChange?.('trainer-submissions')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors"
-                >
-                  <ClipboardList className="h-4 w-4" />
-                  Review Pending ({pendingReviews})
-                </button>
-                <button
-                  onClick={() => onViewChange?.('trainer-students')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors"
-                >
-                  <GraduationCap className="h-4 w-4" />
-                  View All Students
-                </button>
-                <button
-                  onClick={() => onViewChange?.('trainer-courses')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors"
-                >
-                  <Eye className="h-4 w-4" />
-                  Manage Assignments
-                </button>
-              </div>
-            </section>
 
           </main>
         </div>
