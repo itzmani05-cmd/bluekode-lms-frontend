@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ClipboardList, Clock, CheckCircle2, RefreshCcw,
-  GraduationCap, BookOpen, TrendingUp, ChevronRight,
+  BookOpen, TrendingUp, ChevronRight,
   Star, Users, RefreshCw,
 } from 'lucide-react';
 import { useAppStore } from '../../../store/login';
