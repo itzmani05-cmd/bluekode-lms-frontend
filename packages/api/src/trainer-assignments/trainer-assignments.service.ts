@@ -51,6 +51,32 @@ export class TrainerAssignmentsService {
     return course;
   }
 
+  private async getLatestSubmissionsByLecture(enrollmentId: number) {
+    const submissions = await this.prisma.assignmentSubmission.findMany({
+      where: { enrollment_id: enrollmentId },
+      orderBy: { attempt_no: 'desc' },
+      select: {
+        lecture_id: true,
+        marks_obtained: true,
+        submission_status: true,
+      },
+    });
+
+    const map = new Map<
+      number,
+      { marksObtained: number | null; submissionStatus: string }
+    >();
+    for (const sub of submissions) {
+      if (map.has(sub.lecture_id)) continue;
+      map.set(sub.lecture_id, {
+        marksObtained:
+          sub.marks_obtained !== null ? Number(sub.marks_obtained) : null,
+        submissionStatus: sub.submission_status,
+      });
+    }
+    return map;
+  }
+
   async create(dto: CreateTrainerAssignmentDto) {
     await this.ensureTrainerExists(dto.trainerEmployeeProfileId);
     await this.ensureCourseExists(dto.courseId);
@@ -177,6 +203,9 @@ export class TrainerAssignmentsService {
             title: string;
             contentType: string;
             progressStatus: string;
+            maxMarks: number | null;
+            marksObtained: number | null;
+            submissionStatus: string | null;
           }[];
           totalsByType: { LECTURE: number; TASK: number; ASSIGNMENT: number };
         } | null;
@@ -233,13 +262,21 @@ export class TrainerAssignmentsService {
               select: {
                 lecture_id: true,
                 progress_status: true,
-                lecture: { select: { title: true, content_type: true } },
+                lecture: {
+                  select: { title: true, content_type: true, max_marks: true },
+                },
               },
             },
           },
         });
 
         const studentTotals = await getCourseTotals(a.course_id);
+        const submissionsMap = enrollment
+          ? await this.getLatestSubmissionsByLecture(enrollment.enrollment_id)
+          : new Map<
+              number,
+              { marksObtained: number | null; submissionStatus: string }
+            >();
         results.push({
           assignmentId: a.trainer_assignment_id,
           assignmentType: AssignmentType.STUDENT,
@@ -258,12 +295,18 @@ export class TrainerAssignmentsService {
                     enrollment.completion_percentage.toString(),
                   assignedDate: enrollment.assigned_date,
                   totalsByType: studentTotals,
-                  progresses: enrollment.progresses.map((p) => ({
-                    lectureId: p.lecture_id,
-                    title: p.lecture.title,
-                    contentType: p.lecture.content_type,
-                    progressStatus: p.progress_status,
-                  })),
+                  progresses: enrollment.progresses.map((p) => {
+                    const sub = submissionsMap.get(p.lecture_id);
+                    return {
+                      lectureId: p.lecture_id,
+                      title: p.lecture.title,
+                      contentType: p.lecture.content_type,
+                      progressStatus: p.progress_status,
+                      maxMarks: p.lecture.max_marks,
+                      marksObtained: sub?.marksObtained ?? null,
+                      submissionStatus: sub?.submissionStatus ?? null,
+                    };
+                  }),
                 }
               : null,
           },
@@ -298,7 +341,9 @@ export class TrainerAssignmentsService {
               select: {
                 lecture_id: true,
                 progress_status: true,
-                lecture: { select: { title: true, content_type: true } },
+                lecture: {
+                  select: { title: true, content_type: true, max_marks: true },
+                },
               },
             },
           },
@@ -309,6 +354,10 @@ export class TrainerAssignmentsService {
           const key = `${enrollment.studentProfile.student_profile_id}-${a.course_id}`;
           if (seenKey.has(key)) continue;
           seenKey.add(key);
+
+          const submissionsMap = await this.getLatestSubmissionsByLecture(
+            enrollment.enrollment_id,
+          );
 
           results.push({
             assignmentId: a.trainer_assignment_id,
@@ -329,12 +378,18 @@ export class TrainerAssignmentsService {
                   enrollment.completion_percentage.toString(),
                 assignedDate: enrollment.assigned_date,
                 totalsByType: instTotals,
-                progresses: enrollment.progresses.map((p) => ({
-                  lectureId: p.lecture_id,
-                  title: p.lecture.title,
-                  contentType: p.lecture.content_type,
-                  progressStatus: p.progress_status,
-                })),
+                progresses: enrollment.progresses.map((p) => {
+                  const sub = submissionsMap.get(p.lecture_id);
+                  return {
+                    lectureId: p.lecture_id,
+                    title: p.lecture.title,
+                    contentType: p.lecture.content_type,
+                    progressStatus: p.progress_status,
+                    maxMarks: p.lecture.max_marks,
+                    marksObtained: sub?.marksObtained ?? null,
+                    submissionStatus: sub?.submissionStatus ?? null,
+                  };
+                }),
               },
             },
           });
