@@ -239,6 +239,12 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                                       {typeSections.map(({ label, Icon, items, total, bar, text, bg, border }) => {
                                         const done = items.filter((p) => p.progressStatus === 'COMPLETED').length;
                                         const pctType = total > 0 ? Math.round((done / total) * 100) : 0;
+                                        const graded = items.filter((p) => p.marksObtained !== null && p.maxMarks !== null && p.maxMarks > 0);
+                                        const scorePct = graded.length > 0
+                                          ? Math.round(
+                                              (graded.reduce((sum, p) => sum + (p.marksObtained! / p.maxMarks!), 0) / graded.length) * 100,
+                                            )
+                                          : null;
                                         return (
                                           <div key={label} className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
                                             <div className="flex items-center gap-2 mb-2">
@@ -252,6 +258,11 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                                             <p className="text-[10px] font-semibold text-slate-500">
                                               {total === 0 ? 'None in course' : `${done} / ${total} completed`}
                                             </p>
+                                            {scorePct !== null && (
+                                              <p className={`text-[10px] font-extrabold mt-1 ${text}`}>
+                                                Avg Score: {scorePct}%
+                                              </p>
+                                            )}
                                           </div>
                                         );
                                       })}
@@ -270,6 +281,13 @@ const TrainerStudents: React.FC<{ onViewChange?: (view: TrainerViewType) => void
                                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${contentTypeBadge[lec.contentType] ?? 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                                               {contentTypeLabel[lec.contentType] ?? lec.contentType}
                                             </span>
+                                            {(lec.contentType === 'ASSIGNMENT' || lec.contentType === 'TASK') && (
+                                              <span className="text-[9px] font-extrabold w-16 text-right text-slate-600">
+                                                {lec.marksObtained !== null
+                                                  ? `${lec.marksObtained}${lec.maxMarks !== null ? `/${lec.maxMarks}` : ''}`
+                                                  : <span className="text-slate-300">— marks</span>}
+                                              </span>
+                                            )}
                                             <span className={`text-[9px] font-extrabold w-20 text-right
                                               ${ps === 'COMPLETED'   ? 'text-emerald-600' :
                                                 ps === 'IN_PROGRESS' ? 'text-blue-600'    : 'text-slate-400'}`}

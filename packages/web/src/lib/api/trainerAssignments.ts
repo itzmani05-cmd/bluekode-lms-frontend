@@ -41,6 +41,9 @@ export interface AccessibleStudent {
         title: string;
         contentType: string;
         progressStatus: string;
+        maxMarks: number | null;
+        marksObtained: number | null;
+        submissionStatus: string | null;
       }[];
     } | null;
   };
